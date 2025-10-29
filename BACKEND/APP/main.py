@@ -1,7 +1,7 @@
 # app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import posts
+from BACKEND.APP.routers import posts
 from .config import settings
 from .db import get_client
 
