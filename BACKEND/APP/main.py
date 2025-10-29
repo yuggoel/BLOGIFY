@@ -1,7 +1,14 @@
 # app/main.py
+import sys
+import os
+
+# Add the parent directory (BACKEND) to Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from BACKEND.APP.routers import posts
+from routers import posts
 from .config import settings
 from .db import get_client
 
