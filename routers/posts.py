@@ -1,12 +1,13 @@
-# app/routers/posts.py
+# BACKEND/routers/posts.py
+
 from fastapi import APIRouter, HTTPException, Depends, Query, status
 from typing import List
-from ..models import PostCreate, PostResponse, PostUpdate
-from ..repositories.posts import PostRepository
-from ..db import get_database
+from BACKEND.APP.models import PostCreate, PostResponse, PostUpdate
+from repositories.posts import PostRepository
+from BACKEND.APP.db import get_database
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-router = APIRouter(prefix="/posts", tags=["posts"])
+router = APIRouter(prefix="/posts", tags=["Posts"])
 
 
 async def get_repo(db: AsyncIOMotorDatabase = Depends(get_database)) -> PostRepository:
@@ -15,8 +16,7 @@ async def get_repo(db: AsyncIOMotorDatabase = Depends(get_database)) -> PostRepo
 
 @router.post("/", response_model=PostResponse, status_code=status.HTTP_201_CREATED)
 async def create_post(payload: PostCreate, repo: PostRepository = Depends(get_repo)):
-    post = await repo.create_post(payload.title, payload.content, payload.tags)
-    return post
+    return await repo.create_post(payload.title, payload.content, payload.tags)
 
 
 @router.get("/{post_id}", response_model=PostResponse)
@@ -28,9 +28,12 @@ async def read_post(post_id: str, repo: PostRepository = Depends(get_repo)):
 
 
 @router.get("/", response_model=List[PostResponse])
-async def list_posts(skip: int = Query(0, ge=0), limit: int = Query(20, ge=1, le=100), repo: PostRepository = Depends(get_repo)):
-    posts = await repo.list_posts(skip=skip, limit=limit)
-    return posts
+async def list_posts(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    repo: PostRepository = Depends(get_repo),
+):
+    return await repo.list_posts(skip=skip, limit=limit)
 
 
 @router.put("/{post_id}", response_model=PostResponse)
@@ -46,4 +49,4 @@ async def delete_post(post_id: str, repo: PostRepository = Depends(get_repo)):
     deleted = await repo.delete_post(post_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Post not found or invalid ID")
-    return None  # 204 No Content
+    return None

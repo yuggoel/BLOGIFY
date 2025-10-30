@@ -1,40 +1,39 @@
-# app/main.py
-import sys
-import os
-
-# Add the parent directory (BACKEND) to Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import posts
 from .config import settings
-from .db import get_client
+from motor.motor_asyncio import AsyncIOMotorClient  # type: ignore
 
 app = FastAPI(title="Blog Backend")
 
-# CORS - adjust origins in production
+# CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # in prod, set allowed origins list
+    allow_origins=["*"],  # Update this in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+client = None
 
 @app.on_event("startup")
 async def startup_event():
-    # Force creation of client on startup (optional)
-    get_client()
-
+    # Initialize DB connection
+    global client
+    client = AsyncIOMotorClient(settings.MONGODB_URI)
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    # Close client on shutdown
-    client = get_client()
-    client.close()
+    # Close DB connection
+    global client
+    if client is not None:
+        client.close()
 
-
+# Register routers
 app.include_router(posts.router)
+
+@app.get("/")
+async def root():
+    return {"message": "Welcome to the Blog Backend API"}
