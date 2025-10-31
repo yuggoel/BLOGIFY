@@ -44,7 +44,7 @@ Before starting,make sure you have installed:
 ---
 
 - First of all, make sure you have Git installed in your system.
-Open CMD and paste:https://github.com/yuggoel/BLOGIFY.git.
+Open CMD and paste: git clone https://github.com/yuggoel/BLOGIFY.git.
 
 > STEP 2 -Create Virtual Environment & Install Dependencies
 >- python -m venv venv
