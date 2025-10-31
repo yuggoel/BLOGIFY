@@ -39,7 +39,7 @@ Before starting,make sure you have installed:
 - Git
 - Python 3.10+
 - MongoDB(Local or MongoDB Atlas)
-- Node.js & npm
+- npm 
 
 ---
 
@@ -57,39 +57,72 @@ Open CMD and paste:https://github.com/yuggoel/BLOGIFY.git.
 >  -Install dependencies : pip install -r requirements.txt
 
 > STEP 3 -Setup MongoDB
-> - OPTION 1:Local MongoDB
-> Make sure MongoDB is running on your system :mongodb://localhost:27017
-> - OPTION 2:MongoDB Atlas:
-> Create a cluster on MongoDB Atlas and copy the database connection string.
-
-> STEP 4 -Add Envirnoment Variables
->
-> Create a .env file inside the backend folder and add:
 > 
+> BLOGIFY uses MongoDB as its database along with Motor (async MongoDB driver) in FastAPI.
+> 
+> 1 -  Install MongoDB Community Server
+> 
+> Download & install MongoDB (Community Edition):
+> https://www.mongodb.com/try/download/community
+> 
+>During installation:
+> 
+> - Install MongoDB Server
+>- Install MongoDB Tools
+>
+> 2- Start MongoDB Service
+> 
+> MongoDB usually starts automatically.
+> 
+>If not, start it manually:
+>
+>- WINDOWS : net start MongoDB
+>
+>- MACOS: brew services start mongodb-community
+>
+> - LINUX: sudo systemctl start mongod
+>
+> 3 -  Verify MongoDB is running
+> run: mongo --version
+>
+> Or check service status: mongosh
+>
+> If you see a Mongo shell prompt (>) — you're good
+>
+> Exit with : exit
+>
+> 4  -Database creation :
+> 
+> You do not need to create the database manually.
+>
+> MongoDB will automatically create the blog_db database when the backend runs and data is  >inserted.
+>
+> 5 - Configure Environment Variables
+>
+> Create a .env file in the project root and add:
 > MONGODB_URI=mongodb://localhost:27017
 > 
 > MONGODB_DB=blog_db
 > 
->  SECRET_KEY=your_jwt_secret_key
-> 
->  ALGORITHM=HS256
-
-> STEP 5  -Run the Backend (FastAPI)
+>These values allow FastAPI to connect to your local MongoDB instance.
 >
->uvicorn BACKEND.main:app --reload
+> 6 -Start MongoDB Server
 >
->Server will start at:
+> Make sure MongoDB service is running on your system.
 >
-> http://127.0.0.1:8000
-
-> STEP 6 -Test API
+> Windows (MongoDB Compass users):
 >
->  Open Browser
+> MongoDB usually starts automatically. If not, start the MongoDB service from Services Panel > or use PowerShell   :    net start MongoDB
 >
-> http://127.0.0.1:8000/docs
-
-> Done!
-> Your Blogify backend is now running.
+> 7-Run the FastAPI Server
+>
+> Inside your backend folder, activate virtual environment and run:
+>
+> uvicorn main:app --reload
+>
+> Your API will be live at  :  http://127.0.0.1:8000
+>
+> Swagger Docs (API testing)  :  http://127.0.0.1:8000/docs
 > 
 > If you face any error, run: pip install --upgrade pip
 >
