@@ -78,7 +78,10 @@ Open CMD and paste: git clone https://github.com/yuggoel/BLOGIFY.git.
 >
 >- WINDOWS : net start MongoDB
 >
->- MACOS: brew services start mongodb-community
+>- MACS:
+>    1. brew tap mongodb/brew
+>    2. brew install mongodb-community@6.0
+>    3. brew services start mongodb/brew/mongodb-community@6.0
 >
 > - LINUX: sudo systemctl start mongod
 >
