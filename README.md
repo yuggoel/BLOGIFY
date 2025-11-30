@@ -4,7 +4,7 @@
 
 ---
 
-## 📝 Introduction
+##  Introduction
 
 Blogify is a simple and user-friendly platform where anyone can share their thoughts, ideas, and stories. No complicated menus, no messy tools — just a clean and smooth space to write, edit, and publish blogs instantly.
 
@@ -12,7 +12,7 @@ Whether you're a student, developer, writer, or someone who simply loves express
 
 ---
 
-## 🚀 Features
+##  Features
 
 ### Core Features
 - User signup & login  
@@ -31,7 +31,7 @@ Whether you're a student, developer, writer, or someone who simply loves express
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Backend
 - **Python FastAPI** - High-performance web framework
@@ -42,7 +42,7 @@ Whether you're a student, developer, writer, or someone who simply loves express
 
 ---
 
-## 📋 Prerequisites
+##  Prerequisites
 
 Before starting, make sure you have installed:
 
@@ -52,7 +52,7 @@ Before starting, make sure you have installed:
 
 ---
 
-## ⚙️ Installation
+##  Installation
 
 ### 1. Clone the Repository
 ```bash
@@ -115,7 +115,7 @@ Swagger Docs (API testing): http://127.0.0.1:8000/docs
 
 ---
 
-## 🔧 API Endpoints
+##  API Endpoints
 
 ### Authentication
 - `POST /api/signup` - User registration
@@ -136,7 +136,7 @@ Swagger Docs (API testing): http://127.0.0.1:8000/docs
 
 ---
 
-## 📚 EXTERNAL SERVICES/LIBRARIES USED
+##  EXTERNAL SERVICES/LIBRARIES USED
 
 ### Backend – Python FastAPI
 
@@ -153,7 +153,7 @@ Swagger Docs (API testing): http://127.0.0.1:8000/docs
 
 ---
 
-## 💡 Concepts Used
+##  Concepts Used
 
 ### BACKEND
 
@@ -185,7 +185,7 @@ Swagger Docs (API testing): http://127.0.0.1:8000/docs
 
 ---
 
-## 📄 Python files created
+##  Python files created
 
 - **main.py** : Entry point of the FastAPI app; starts the server, loads settings, and registers all routes.
 - **database.py** : Creates and manages the MongoDB connection using Motor and provides the async DB instance.
@@ -200,7 +200,7 @@ Swagger Docs (API testing): http://127.0.0.1:8000/docs
 
 ---
 
-## 📎 Extra files
+##  Extra files
 
 - **.env** : Stores database credentials (not in Python files but part of backend)
 - **requirements.txt** : Project dependencies
@@ -208,7 +208,7 @@ Swagger Docs (API testing): http://127.0.0.1:8000/docs
 
 ---
 
-## 📝 Additional Notes
+##  Additional Notes
 
 1. First create your virtual environment and activate it
 2. Install required Python dependencies (FastAPI, Motor, Uvicorn, etc.)
