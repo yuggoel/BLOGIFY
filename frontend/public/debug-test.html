@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Test</title>
+</head>
+<body>
+    <h1>Debug Test</h1>
+    <button onclick="testNewEmail()">Test New Email</button>
+    <button onclick="testExistingEmail()">Test Existing Email</button>
+    <div id="result"></div>
+
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        async function testNewEmail() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Testing with new email...</p>';
+            
+            // Generate a unique email
+            const timestamp = new Date().getTime();
+            const email = `web_test_${timestamp}@example.com`;
+            
+            try {
+                const response = await axios.post('http://localhost:8000/users/signup', {
+                    name: 'Web Test User',
+                    email: email,
+                    password: 'password123'
+                });
+                
+                resultDiv.innerHTML = `
+                    <h3>Success!</h3>
+                    <p>Status: ${response.status}</p>
+                    <p>Data: ${JSON.stringify(response.data)}</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>Error!</h3>
+                    <p>Status: ${error.response?.status || 'Unknown'}</p>
+                    <p>Data: ${JSON.stringify(error.response?.data || 'No data')}</p>
+                    <p>Message: ${error.message}</p>
+                `;
+            }
+        }
+        
+        async function testExistingEmail() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Testing with existing email...</p>';
+            
+            try {
+                // Use an email we know exists
+                const response = await axios.post('http://localhost:8000/users/signup', {
+                    name: 'Web Test User',
+                    email: 'web_test_1764355675075@example.com', // From our previous test
+                    password: 'password123'
+                });
+                
+                resultDiv.innerHTML = `
+                    <h3>Unexpected Success!</h3>
+                    <p>Status: ${response.status}</p>
+                    <p>Data: ${JSON.stringify(response.data)}</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>Expected Error!</h3>
+                    <p>Status: ${error.response?.status || 'Unknown'}</p>
+                    <p>Data: ${JSON.stringify(error.response?.data || 'No data')}</p>
+                    <p>Message: ${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

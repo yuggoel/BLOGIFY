@@ -1,4 +1,4 @@
-<h1 align="center"> Blogify </h1>
+# Blogify
 
 <p align="center"><i>Your space to write, express, and inspire.</i></p>
 
@@ -12,255 +12,210 @@ Whether you're a student, developer, writer, or someone who simply loves express
 
 ---
 
-##  Features
+## 🚀 Features
 
+### Core Features
 - User signup & login  
 - Create, edit & delete blogs  
 - Clean and responsive UI  
 - Explore blogs from others  
 - Personal profile & dashboard
-- View others user's profiles
-- Real time notification
-  
-  ---
-  ## Side Features
-  - Edit profile details (name, email, password, bio, skills/tags, profile picture)
-  - View all comments on a particular blog
-  - Search posts using keywords from title or content
-  - Search users by name or alphabet letters
+- View other users' profiles
+- Real-time notifications
+
+### Additional Features
+- Edit profile details (name, email, password, bio, skills/tags, profile picture)
+- View all comments on a particular blog
+- Search posts using keywords from title or content
+- Search users by name or alphabet letters
 
 ---
-How to test this application on your own system :
 
-REQUIREMENTS
+## 🛠️ Tech Stack
 
-Before starting,make sure you have installed:
+### Backend
+- **Python FastAPI** - High-performance web framework
+- **MongoDB** - NoSQL database for storing users, posts, and comments
+- **Motor** - Async MongoDB driver for FastAPI
+- **Pydantic** - Data validation and settings management
+- **Uvicorn** - ASGI server for running the application
+
+---
+
+## 📋 Prerequisites
+
+Before starting, make sure you have installed:
 
 - Git
 - Python 3.10+
-- MongoDB(Local or MongoDB Atlas)
-- npm 
+- MongoDB (Local or MongoDB Atlas)
 
 ---
 
-- First of all, make sure you have Git installed in your system.
-Open CMD and paste: git clone https://github.com/yuggoel/BLOGIFY.git.
+## ⚙️ Installation
 
-> STEP 2 -Create Virtual Environment & Install Dependencies
->- python -m venv venv
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yuggoel/BLOGIFY.git
+cd BLOGIFY
+```
 
->-Activate environment:
->- WINDOWS:
-> venv\Scripts\activate
->- MAC/LINUX :
->  source venv/bin/activate
->  -Install dependencies : pip install -r requirements.txt
+### 2. Backend Setup
 
-> STEP 3 -Setup MongoDB
-> 
-> BLOGIFY uses MongoDB as its database along with Motor (async MongoDB driver) in FastAPI.
-> 
-> 1 -  Install MongoDB Community Server
-> 
-> Download & install MongoDB (Community Edition):
-> https://www.mongodb.com/try/download/community
-> 
->During installation:
-> 
-> - Install MongoDB Server
->- Install MongoDB Tools
->
-> 2- Start MongoDB Service
-> 
-> MongoDB usually starts automatically.
-> 
->If not, start it manually:
->
->- WINDOWS : net start MongoDB
->
->- MACS:
->    1. brew tap mongodb/brew
->    2. brew install mongodb-community@6.0
->    3. brew services start mongodb/brew/mongodb-community@6.0
->
-> - LINUX: sudo systemctl start mongod
->
-> 3 -  Verify MongoDB is running
-> run: mongo --version
->
-> Or check service status: mongosh
->
-> If you see a Mongo shell prompt (>) — you're good
->
-> Exit with : exit
->
-> 4  -Database creation :
-> 
-> You do not need to create the database manually.
->
-> MongoDB will automatically create the blog_db database when the backend runs and data is  >inserted.
->
-> 5 - Configure Environment Variables
->
-> Create a .env file in the project root and add:
-> MONGODB_URI=mongodb://localhost:27017
-> 
-> MONGODB_DB=blog_db
-> 
->These values allow FastAPI to connect to your local MongoDB instance.
->
-> 6 -Start MongoDB Server
->
-> Make sure MongoDB service is running on your system.
->
-> Windows (MongoDB Compass users):
->
-> MongoDB usually starts automatically. If not, start the MongoDB service from Services Panel > or use PowerShell   :    net start MongoDB
->
-> 7-Run the FastAPI Server
->
-> Inside your backend folder, activate virtual environment and run:
->
-> uvicorn main:app --reload
->
-> Your API will be live at  :  http://127.0.0.1:8000
->
-> Swagger Docs (API testing)  :  http://127.0.0.1:8000/docs
-> 
-> If you face any error, run: pip install --upgrade pip
->
-> and reinstall requirements.
+#### Create Virtual Environment
+```bash
+# Windows
+python -m venv venv
+venv\Scripts\activate
+
+# macOS/Linux
+python3 -m venv venv
+source venv/bin/activate
+```
+
+#### Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Database Setup
+
+#### Install MongoDB
+Download & install MongoDB (Community Edition):
+https://www.mongodb.com/try/download/community
+
+#### Start MongoDB Service
+```bash
+# Windows
+net start MongoDB
+
+# macOS
+brew services start mongodb-community@6.0
+
+# Linux
+sudo systemctl start mongod
+```
+
+#### Configure Environment Variables
+Create a `.env` file in the project root and add:
+```
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DB=blog_db
+```
+
+### 4. Run the Backend Server
+```bash
+cd BACKEND
+uvicorn APP.main:app --reload
+```
+
+Your API will be live at: http://127.0.0.1:8000
+
+Swagger Docs (API testing): http://127.0.0.1:8000/docs
 
 ---
 
-EXTERNAL SERVICES/LIBRARIES USED :
+## 🔧 API Endpoints
 
->  -Backend – Python FastAPI
+### Authentication
+- `POST /api/signup` - User registration
+- `POST /api/login` - User login
 
-- FastAPI (fastapi)
-Backend web framework to build REST APIs. Handles routing, request validation, authentication & data processing.
+### Posts
+- `GET /api/posts` - Get all posts
+- `POST /api/posts` - Create a new post
+- `GET /api/posts/{id}` - Get a specific post
+- `PUT /api/posts/{id}` - Update a post
+- `DELETE /api/posts/{id}` - Delete a post
 
-- Uvicorn (uvicorn)
-ASGI server used to run the FastAPI backend.
+### Users
+- `GET /api/users` - Get all users
+- `GET /api/users/{id}` - Get a specific user
+- `PUT /api/users/{id}` - Update user profile
+- `DELETE /api/users/{id}` - Delete user account
 
-- Pydantic (pydantic)
-Used for data validation and defining schema models for requests/responses.
-
-- Motor / PyMongo (motor or pymongo)
-MongoDB driver to interact with the database.
-motor = async MongoDB client used with FastAPI.
-
-
-> -DATABASE-MonogoDB
-> 
-- MongoDB
-NoSQL database used to store users, posts, comments and other dynamic data for Blogify.
-
-- MongoDB Compass / Atlas (if used)
-  GUI or cloud MongoDB hosting platform for managing the database.
 ---
 
-> - Concepts Used -
->   
->   BACKEND :
+## 📚 EXTERNAL SERVICES/LIBRARIES USED
+
+### Backend – Python FastAPI
+
+- **FastAPI (fastapi)** - Backend web framework to build REST APIs. Handles routing, request validation, authentication & data processing.
+- **Uvicorn (uvicorn)** - ASGI server used to run the FastAPI backend.
+- **Pydantic (pydantic)** - Used for data validation and defining schema models for requests/responses.
+- **Motor / PyMongo (motor or pymongo)** - MongoDB driver to interact with the database.
+  - motor = async MongoDB client used with FastAPI.
+
+### DATABASE - MongoDB
+
+- **MongoDB** - NoSQL database used to store users, posts, comments and other dynamic data for Blogify.
+- **MongoDB Compass / Atlas (if used)** - GUI or cloud MongoDB hosting platform for managing the database.
+
+---
+
+## 💡 Concepts Used
+
+### BACKEND
 
 - FastAPI Framework
-
 - Asynchronous Programming (async/await)
-
 - REST API Endpoints (CRUD)
-
 - Routing with APIRouter
-
 - Dependency Injection (Depends)
-
 - Pydantic Models for request & response validation
-
 - Repository Pattern to separate DB logic
-
 - HTTP Methods — GET, POST, PUT, DELETE
-
 - HTTP Status Codes — 200, 201, 404, 204
-
 - Error Handling (HTTPException)
-
 - Query Parameters using Query() (skip, limit)
-
 - Middleware (CORS) for frontend communication
-
 - Environment Variables (.env) for config security
-
 - Modular Project Structure
-
 - Uvicorn Server for running the application
-  
-> -DATABSE (MongoDB)
->
 
- -  MongoDB — NoSQL Document Database
+### DATABASE (MongoDB)
 
+- MongoDB — NoSQL Document Database
 - ObjectId — MongoDB unique identifier
-
 - Motor (Async MongoDB Driver) — async DB queries
-
 - Update Document (update_one)
-
 - Delete Document (delete_one)
-
 - Database Dependency (get_database)
-
 - MongoDB URI from .env file
 
 ---
 
-## Python files created -
+## 📄 Python files created
 
-- main.py : Entry point of the FastAPI app; starts the server, loads settings, and registers all routes.
-
-- database.py : Creates and manages the MongoDB connection using Motor and provides the async DB instance.
-
-- models.py : Defines Pydantic schemas for validating request data and formatting API responses.
-
-- config.py : Loads environment variables (like MongoDB URL) for secure and centralized configuration.
-
-- routers/ : Directory that organizes API route files by feature.
-
-- routers/posts.py : Contains API routes for creating, reading, updating, and deleting posts.
-
-- routers/auth.py (if added) : Contains authentication routes like user registration and login.
-
-- repositories/ : Directory that holds database logic separate from API code.
-
-- repositories/post_repository.py : Handles MongoDB queries for posts (insert, find, update, delete).
-
-- repositories/user_repository.py (if added) : Handles MongoDB queries for users (create, find, update).
+- **main.py** : Entry point of the FastAPI app; starts the server, loads settings, and registers all routes.
+- **database.py** : Creates and manages the MongoDB connection using Motor and provides the async DB instance.
+- **models.py** : Defines Pydantic schemas for validating request data and formatting API responses.
+- **config.py** : Loads environment variables (like MongoDB URL) for secure and centralized configuration.
+- **routers/** : Directory that organizes API route files by feature.
+  - **routers/posts.py** : Contains API routes for creating, reading, updating, and deleting posts.
+  - **routers/auth.py** : Contains authentication routes like user registration and login.
+- **repositories/** : Directory that holds database logic separate from API code.
+  - **repositories/post_repository.py** : Handles MongoDB queries for posts (insert, find, update, delete).
+  - **repositories/user_repository.py** : Handles MongoDB queries for users (create, find, update).
 
 ---
-## extra files 
 
-- .env : Stores database credentials (not in Python files but part of backend)
--  pyproject.toml : Project dependencies & settings
-  ---
+## 📎 Extra files
 
-##Please note :
+- **.env** : Stores database credentials (not in Python files but part of backend)
+- **requirements.txt** : Project dependencies
+- **.gitignore** : Specifies files and directories to be ignored by Git
 
-- First of all, create your virtual environment and activate it.
-Then install required Python dependencies (FastAPI, Motor, Uvicorn, Python-dotenv, Pydantic, etc).
-- Create the backend folder structure and files
-(main.py, config.py, db.py, models.py, routers/posts.py, repositories/posts.py).
-- Create a .env file in the backend folder.
-Add MongoDB connection string and env variables (DB name, host, etc).
-- Update the config.py file to load environment variables securely using pydantic_settings.
-- Update the db.py file to initialize MongoDB client using Motor (async MongoDB driver).
-- Update routers/posts.py to define REST API routes for posts
-(Create, Read, Update, Delete posts).
-- Update repositories/posts.py to define MongoDB CRUD logic for posts.
-- Update models.py to define Pydantic schemas for requests & responses
-(PostCreate, PostUpdate, PostResponse).
-- Run the FastAPI backend using:
-uvicorn app.main:app --reload
-- Test all endpoints using Postman / Thunder Client (CRUD operations).
-- Once backend works, connect it to MongoDB Compass / Atlas and verify documents.
+---
 
+## 📝 Additional Notes
 
+1. First create your virtual environment and activate it
+2. Install required Python dependencies (FastAPI, Motor, Uvicorn, etc.)
+3. Set up the backend folder structure and files
+4. Create a .env file with MongoDB connection string
+5. Run the FastAPI backend using: `uvicorn APP.main:app --reload`
+6. Test all endpoints using Postman or Swagger UI
+7. Connect to MongoDB Compass/Atlas to verify documents
 
+---

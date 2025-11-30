@@ -1,7 +1,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import posts
+from routers import posts, users
 from .config import settings
 from motor.motor_asyncio import AsyncIOMotorClient  # type: ignore
 
@@ -33,7 +33,7 @@ async def shutdown_event():
 
 # Register routers
 app.include_router(posts.router)
-
+app.include_router(users.router)
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Blog Backend API"}
