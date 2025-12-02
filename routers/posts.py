@@ -1,11 +1,14 @@
 # BACKEND/routers/posts.py
 
-from fastapi import APIRouter, HTTPException, Depends, Query, status
+from fastapi import APIRouter, HTTPException, Depends, Query, status, File, UploadFile
 from typing import List
 from BACKEND.APP.models import PostCreate, PostResponse, PostUpdate
 from repositories.posts import PostRepository
 from BACKEND.APP.db import get_database
 from motor.motor_asyncio import AsyncIOMotorDatabase
+import shutil
+import os
+import uuid
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
@@ -14,9 +17,31 @@ async def get_repo(db: AsyncIOMotorDatabase = Depends(get_database)) -> PostRepo
     return PostRepository(db)
 
 
+@router.post("/upload", response_model=dict)
+async def upload_image(file: UploadFile = File(...)):
+    # Create static/images directory if it doesn't exist
+    os.makedirs("static/images", exist_ok=True)
+    
+    # Generate unique filename
+    file_extension = os.path.splitext(file.filename)[1]
+    filename = f"{uuid.uuid4()}{file_extension}"
+    file_path = f"static/images/{filename}"
+    
+    # Save file
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    return {"url": f"/static/images/{filename}"}
+
+
 @router.post("/", response_model=PostResponse, status_code=status.HTTP_201_CREATED)
 async def create_post(payload: PostCreate, repo: PostRepository = Depends(get_repo)):
-    return await repo.create_post(payload.title, payload.content, payload.user_id, payload.tags)
+    return await repo.create_post(payload.title, payload.content, payload.user_id, payload.tags, payload.image_url)
+
+
+@router.get("/count", response_model=int)
+async def count_posts(repo: PostRepository = Depends(get_repo)):
+    return await repo.count_posts()
 
 
 @router.get("/{post_id}", response_model=PostResponse)
@@ -38,7 +63,7 @@ async def list_posts(
 
 @router.put("/{post_id}", response_model=PostResponse)
 async def update_post(post_id: str, payload: PostUpdate, repo: PostRepository = Depends(get_repo)):
-    post = await repo.update_post(post_id, payload.title, payload.content, payload.tags)
+    post = await repo.update_post(post_id, payload.title, payload.content, payload.tags, payload.image_url)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found or invalid ID")
     return post

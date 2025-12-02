@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, status
-from BACKEND.APP.models import UserCreate, UserLogin, UserResponse
+from BACKEND.APP.models import UserCreate, UserLogin, UserResponse, UserUpdate
 from repositories.users import UserRepository
 from BACKEND.APP.db import get_database
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -27,9 +27,22 @@ async def login(payload: UserLogin, repo: UserRepository = Depends(get_repo)):
     return {"id": str(user_doc["_id"]), "name": user_doc["name"], "email": user_doc["email"]}
 
 
+@router.get("/count", response_model=int)
+async def count_users(repo: UserRepository = Depends(get_repo)):
+    return await repo.count_users()
+
+
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(user_id: str, repo: UserRepository = Depends(get_repo)):
     user = await repo.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+@router.put("/{user_id}", response_model=UserResponse)
+async def update_user(user_id: str, payload: UserUpdate, repo: UserRepository = Depends(get_repo)):
+    user = await repo.update_user(user_id, payload.dict(exclude_unset=True))
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user

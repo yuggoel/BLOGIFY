@@ -12,6 +12,7 @@ def _doc_to_post(doc: dict) -> dict:
         "content": doc["content"],
         "user_id": doc.get("user_id"), 
         "tags": doc.get("tags", []),
+        "image_url": doc.get("image_url"),
         "created_at": doc.get("created_at"),
         "updated_at": doc.get("updated_at"),
     }
@@ -21,13 +22,14 @@ class PostRepository:
     def __init__(self, db: AsyncIOMotorDatabase):
         self._coll = db.get_collection("posts")
 
-    async def create_post(self, title: str, content: str, user_id: str, tags: Optional[list] = None) -> dict:
+    async def create_post(self, title: str, content: str, user_id: str, tags: Optional[list] = None, image_url: Optional[str] = None) -> dict:
         now = datetime.utcnow()
         doc = {
             "title": title,
             "content": content,
             "user_id": user_id,
             "tags": tags or [],
+            "image_url": image_url,
             "created_at": now,
             "updated_at": None,
         }
@@ -48,7 +50,7 @@ class PostRepository:
         docs = await cursor.to_list(length=limit)
         return [_doc_to_post(d) for d in docs]
 
-    async def update_post(self, post_id: str, title: Optional[str], content: Optional[str], tags: Optional[list]) -> Optional[dict]:
+    async def update_post(self, post_id: str, title: Optional[str], content: Optional[str], tags: Optional[list], image_url: Optional[str] = None) -> Optional[dict]:
         if not ObjectId.is_valid(post_id):
             return None
         update_fields = {}
@@ -58,6 +60,8 @@ class PostRepository:
             update_fields["content"] = content
         if tags is not None:
             update_fields["tags"] = tags
+        if image_url is not None:
+            update_fields["image_url"] = image_url
         if not update_fields:
             # nothing to update
             return await self.get_post(post_id)
@@ -77,3 +81,7 @@ class PostRepository:
             return False
         result = await self._coll.delete_one({"_id": ObjectId(post_id)})
         return result.deleted_count == 1
+
+    async def count_posts(self) -> int:
+        return await self._coll.count_documents({})
+

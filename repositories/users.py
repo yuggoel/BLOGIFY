@@ -49,7 +49,35 @@ class UserRepository:
             "id": str(user["_id"]),
             "name": user["name"],
             "email": user["email"],
+            "profile_picture_url": user.get("profile_picture_url"),
             "created_at": user.get("created_at")
+        }
+
+    async def update_user(self, user_id: str, update_data: dict):
+        if not ObjectId.is_valid(user_id):
+            return None
+        
+        # Filter out None values
+        update_data = {k: v for k, v in update_data.items() if v is not None}
+        
+        if not update_data:
+            return await self.get_user_by_id(user_id)
+
+        result = await self.db.users.find_one_and_update(
+            {"_id": ObjectId(user_id)},
+            {"$set": update_data},
+            return_document=True
+        )
+        
+        if not result:
+            return None
+            
+        return {
+            "id": str(result["_id"]),
+            "name": result["name"],
+            "email": result["email"],
+            "profile_picture_url": result.get("profile_picture_url"),
+            "created_at": result.get("created_at")
         }
 
     async def delete_user(self, user_id: str):
@@ -59,3 +87,6 @@ class UserRepository:
         
         result = await self.db.users.delete_one({"_id": ObjectId(user_id)})
         return result.deleted_count > 0
+
+    async def count_users(self) -> int:
+        return await self.db.users.count_documents({})
