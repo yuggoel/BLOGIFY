@@ -115,6 +115,20 @@ Swagger Docs (API testing): http://127.0.0.1:8000/docs
 
 ---
 
+##  Quick Start (Run Both Backend & Frontend)
+
+Once you have installed the dependencies for both Backend and Frontend, you can start the entire application with a single script located in the root directory:
+
+- **Windows (Double-click):** Run `start_app.bat`
+- **PowerShell:** Run `.\start_app.ps1`
+
+This will automatically:
+1. Start the FastAPI Backend server.
+2. Start the Next.js Frontend server.
+3. Open your default browser to the application.
+
+---
+
 ##  API Endpoints
 
 ### Authentication
@@ -205,6 +219,47 @@ Swagger Docs (API testing): http://127.0.0.1:8000/docs
 - **.env** : Stores database credentials (not in Python files but part of backend)
 - **requirements.txt** : Project dependencies
 - **.gitignore** : Specifies files and directories to be ignored by Git
+- **start_app.bat** : Windows batch script to launch both backend and frontend servers simultaneously.
+- **start_app.ps1** : PowerShell script to launch both backend and frontend servers simultaneously.
+
+### Script Source Code (Reference)
+
+If these files are missing, you can recreate them with the following code:
+
+**start_app.bat**
+```bat
+@echo off
+echo Starting Backend...
+start "Blogify Backend" cmd /k "uvicorn BACKEND.APP.main:app --reload"
+
+echo Starting Frontend...
+cd frontend
+start "Blogify Frontend" cmd /k "npm run dev"
+
+echo Waiting for services to start...
+timeout /t 5 >nul
+start http://localhost:3000
+
+echo Both services are starting in separate windows.
+```
+
+**start_app.ps1**
+```powershell
+# Start Backend
+Write-Host "Starting Backend..." -ForegroundColor Green
+Start-Process -FilePath "powershell" -ArgumentList "-NoExit", "-Command", "uvicorn BACKEND.APP.main:app --reload"
+
+# Start Frontend
+Write-Host "Starting Frontend..." -ForegroundColor Green
+Start-Process -FilePath "powershell" -ArgumentList "-NoExit", "-Command", "cd frontend; npm run dev"
+
+# Open Browser
+Write-Host "Waiting for services to start..." -ForegroundColor Cyan
+Start-Sleep -Seconds 5
+Start-Process "http://localhost:3000"
+
+Write-Host "Both services are starting in separate windows." -ForegroundColor Cyan
+```
 
 ---
 

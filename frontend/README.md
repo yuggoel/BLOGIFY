@@ -182,6 +182,11 @@ frontend/
     npm run dev
     ```
 
+### Alternative: Quick Start (Run Everything)
+If you want to run both the Backend and Frontend simultaneously, you can use the scripts provided in the **project root** folder:
+- **Windows:** Double-click `start_app.bat`
+- **PowerShell:** Run `..\start_app.ps1`
+
 5.  **Access the App:**
     Open your web browser and go to:
     `http://localhost:3000`
@@ -219,6 +224,47 @@ This file acts as the bridge between Frontend and Backend.
 | `login(data)` | POST | `/users/login` | Authenticates a user. |
 | `signup(data)` | POST | `/users/signup` | Registers a new user. |
 | `getUser(id)` | GET | `/users/{id}` | Fetches user profile details. |
+
+---
+
+## 9. Automation Scripts Reference
+
+To streamline development, we use automation scripts located in the **project root**. If you need to recreate them, here is the source code:
+
+**start_app.bat (Windows CMD)**
+```bat
+@echo off
+echo Starting Backend...
+start "Blogify Backend" cmd /k "uvicorn BACKEND.APP.main:app --reload"
+
+echo Starting Frontend...
+cd frontend
+start "Blogify Frontend" cmd /k "npm run dev"
+
+echo Waiting for services to start...
+timeout /t 5 >nul
+start http://localhost:3000
+
+echo Both services are starting in separate windows.
+```
+
+**start_app.ps1 (PowerShell)**
+```powershell
+# Start Backend
+Write-Host "Starting Backend..." -ForegroundColor Green
+Start-Process -FilePath "powershell" -ArgumentList "-NoExit", "-Command", "uvicorn BACKEND.APP.main:app --reload"
+
+# Start Frontend
+Write-Host "Starting Frontend..." -ForegroundColor Green
+Start-Process -FilePath "powershell" -ArgumentList "-NoExit", "-Command", "cd frontend; npm run dev"
+
+# Open Browser
+Write-Host "Waiting for services to start..." -ForegroundColor Cyan
+Start-Sleep -Seconds 5
+Start-Process "http://localhost:3000"
+
+Write-Host "Both services are starting in separate windows." -ForegroundColor Cyan
+```
 
 ---
 
