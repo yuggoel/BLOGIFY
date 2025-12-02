@@ -16,7 +16,7 @@ async def get_repo(db: AsyncIOMotorDatabase = Depends(get_database)) -> PostRepo
 
 @router.post("/", response_model=PostResponse, status_code=status.HTTP_201_CREATED)
 async def create_post(payload: PostCreate, repo: PostRepository = Depends(get_repo)):
-    return await repo.create_post(payload.title, payload.content, payload.tags)
+    return await repo.create_post(payload.title, payload.content, payload.user_id, payload.tags)
 
 
 @router.get("/{post_id}", response_model=PostResponse)

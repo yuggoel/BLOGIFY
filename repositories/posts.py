@@ -10,6 +10,7 @@ def _doc_to_post(doc: dict) -> dict:
         "id": str(doc["_id"]),
         "title": doc["title"],
         "content": doc["content"],
+        "user_id": doc.get("user_id"), 
         "tags": doc.get("tags", []),
         "created_at": doc.get("created_at"),
         "updated_at": doc.get("updated_at"),
@@ -20,11 +21,12 @@ class PostRepository:
     def __init__(self, db: AsyncIOMotorDatabase):
         self._coll = db.get_collection("posts")
 
-    async def create_post(self, title: str, content: str, tags: Optional[list] = None) -> dict:
+    async def create_post(self, title: str, content: str, user_id: str, tags: Optional[list] = None) -> dict:
         now = datetime.utcnow()
         doc = {
             "title": title,
             "content": content,
+            "user_id": user_id,
             "tags": tags or [],
             "created_at": now,
             "updated_at": None,
