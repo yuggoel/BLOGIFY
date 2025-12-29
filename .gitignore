@@ -98,3 +98,7 @@ Icon\r
 Thumbs.db
 Icon?
 Icon\r
+
+# Static files
+static/
+BACKEND/static/
