@@ -20,7 +20,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const user = await apiLogin({ email, password });
+      const response = await apiLogin({ email, password });
+      const user = {
+        id: response.id,
+        name: response.name,
+        email: response.email,
+        created_at: new Date().toISOString(), // or fetch from backend if available
+      };
       login(user);
       router.push('/feed');
     } catch (err) {
