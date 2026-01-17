@@ -9,6 +9,10 @@ import os
 
 app = FastAPI(title="Blog Backend")
 
+@app.get("/")
+def root():
+    return {"status": "Backend running"}
+
 # Create static directory if it doesn't exist
 os.makedirs("static/images", exist_ok=True)
 
