@@ -15,7 +15,7 @@ export async function generateStaticParams() {
     return [];
   }
 }
-}
+import { getPost, getUser, formatDate, calculateReadTime, getImageUrl, type Post, type User } from '@/lib/api';
 import { getPost, getUser, formatDate, calculateReadTime, getImageUrl, type Post, type User } from '@/lib/api';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
