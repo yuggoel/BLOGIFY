@@ -1,4 +1,21 @@
 /* eslint-disable @next/next/no-img-element */
+
+export async function generateStaticParams() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts`);
+    if (!res.ok) {
+      console.error('Posts fetch returned non-OK status', res.status);
+      return [];
+    }
+    const posts = await res.json();
+    return posts.map((post: any) => ({ id: String(post.id) }));
+  } catch (err) {
+    console.error('Failed to fetch posts for generateStaticParams', err);
+    // Return empty list to avoid failing the whole build
+    return [];
+  }
+}
+import { getPost, getUser, formatDate, calculateReadTime, getImageUrl, type Post, type User } from '@/lib/api';
 import { getPost, getUser, formatDate, calculateReadTime, getImageUrl, type Post, type User } from '@/lib/api';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
