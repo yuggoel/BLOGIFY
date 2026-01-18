@@ -1,4 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
+
+export async function generateStaticParams() {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts`);
+  const posts = await res.json();
+  return posts.map((post: any) => ({ id: String(post.id) }));
+}
 import { getPost, getUser, formatDate, calculateReadTime, getImageUrl, type Post, type User } from '@/lib/api';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
