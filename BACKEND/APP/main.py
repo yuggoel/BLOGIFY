@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from routers import posts, users
+from .routers import posts, users
 from .config import settings
 from motor.motor_asyncio import AsyncIOMotorClient  # type: ignore
 import os
