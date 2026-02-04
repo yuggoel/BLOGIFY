@@ -120,8 +120,10 @@ export default async function PostPage({ params }: PostPageProps) {
                 
                 if (!imageUrl) return null;
 
+                // Return just the img - the p override will handle unwrapping
+                // We use a span wrapper with block display to avoid p > div/figure issues
                 return (
-                  <div className="my-10">
+                  <span className="block my-10">
                     <img 
                       src={imageUrl} 
                       alt={alt || ''} 
@@ -129,12 +131,33 @@ export default async function PostPage({ params }: PostPageProps) {
                       {...rest} 
                     />
                     {title && (
-                      <p className="text-center text-sm text-slate-500 mt-2 italic">
+                      <span className="block text-center text-sm text-slate-500 mt-2 italic">
                         {title}
-                      </p>
+                      </span>
                     )}
-                  </div>
+                  </span>
                 );
+              },
+              // Override p to handle images - check for our span wrapper
+              p: ({ children, ...props }) => {
+                // Check if children contain an image (our span wrapper)
+                // by looking at the actual React elements
+                const childArray = Array.isArray(children) ? children : [children];
+                const hasBlockImage = childArray.some((child: any) => {
+                  if (!child || typeof child !== 'object') return false;
+                  // Check if it's our custom img component (returns span with block class)
+                  if (child.type === 'span' && child.props?.className?.includes('block my-10')) return true;
+                  // Check if it's a figure or has type img
+                  if (child.type === 'figure' || child.type === 'img') return true;
+                  if (child.props?.node?.tagName === 'img') return true;
+                  return false;
+                });
+                
+                if (hasBlockImage) {
+                  return <>{children}</>;
+                }
+                
+                return <p {...props}>{children}</p>;
               }
             }}
           >
@@ -145,8 +168,8 @@ export default async function PostPage({ params }: PostPageProps) {
         {/* Footer / Author Bio */}
         {author && (
           <div className="mt-16 pt-8 border-t border-slate-200 dark:border-slate-800">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center overflow-hidden">
+            <Link href={`/users/${author.id}`} className="flex items-center gap-4 group">
+              <div className="w-16 h-16 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center overflow-hidden group-hover:ring-2 group-hover:ring-indigo-500 transition">
                  {author.profile_picture_url ? (
                     <img src={getImageUrl(author.profile_picture_url) || ''} alt={author.name} className="w-full h-full object-cover" />
                  ) : (
@@ -159,11 +182,11 @@ export default async function PostPage({ params }: PostPageProps) {
                 <p className="text-sm text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold mb-1">
                   Written by
                 </p>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
                   {author.name}
                 </h3>
               </div>
-            </div>
+            </Link>
           </div>
         )}
       </article>

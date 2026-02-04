@@ -6,11 +6,39 @@ import EditPostButton from './EditPostButton';
 interface PostCardProps {
   post: Post;
   featured?: boolean;
+  authorName?: string;
 }
 
-export default function PostCard({ post, featured = false }: PostCardProps) {
+// Strip markdown syntax for plain text preview
+function stripMarkdown(text: string): string {
+  return text
+    // Remove images ![alt](url)
+    .replace(/!\[.*?\]\(.*?\)/g, '')
+    // Remove links [text](url) but keep text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Remove bold **text** or __text__
+    .replace(/(\*\*|__)(.*?)\1/g, '$2')
+    // Remove italic *text* or _text_
+    .replace(/(\*|_)(.*?)\1/g, '$2')
+    // Remove code blocks ```code```
+    .replace(/```[\s\S]*?```/g, '')
+    // Remove inline code `code`
+    .replace(/`([^`]+)`/g, '$1')
+    // Remove headers # ## ###
+    .replace(/^#{1,6}\s+/gm, '')
+    // Remove blockquotes
+    .replace(/^>\s+/gm, '')
+    // Remove horizontal rules
+    .replace(/^[-*_]{3,}\s*$/gm, '')
+    // Remove extra whitespace
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export default function PostCard({ post, featured = false, authorName }: PostCardProps) {
   const readTime = calculateReadTime(post.content);
   const formattedDate = formatDate(post.created_at);
+  const excerpt = stripMarkdown(post.content);
 
   if (featured) {
     return (
@@ -35,12 +63,18 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
               </h2>
 
               <p className="text-indigo-100 mb-6 line-clamp-3 text-lg">
-                {post.content}
+                {excerpt}
               </p>
             </div>
 
             {/* Meta */}
             <div className="relative z-10 flex items-center gap-4 text-sm text-indigo-100 font-medium border-t border-white/20 pt-4">
+              {authorName && (
+                <>
+                  <span className="text-white font-semibold">{authorName}</span>
+                  <span>•</span>
+                </>
+              )}
               <span>{formattedDate}</span>
               <span>•</span>
               <span>{readTime}</span>
@@ -78,12 +112,18 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
 
           {/* Excerpt */}
           <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 line-clamp-3 flex-grow">
-            {post.content}
+            {excerpt}
           </p>
 
           <div className="mt-auto">
             {/* Footer Line */}
-            <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-500 border-t border-slate-100 dark:border-slate-700 pt-4">
+            <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-500 border-t border-slate-100 dark:border-slate-700 pt-4">
+              {authorName && (
+                <>
+                  <span className="font-medium text-slate-700 dark:text-slate-300">{authorName}</span>
+                  <span>•</span>
+                </>
+              )}
               <time dateTime={post.created_at}>{formattedDate}</time>
               <span>•</span>
               <span>{readTime}</span>

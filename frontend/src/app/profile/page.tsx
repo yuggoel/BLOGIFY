@@ -2,15 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getUser, User, formatDate } from '@/lib/api';
-import { ProfilePicture } from '@/components';
+import Link from 'next/link';
+import { getUser, User, formatDate, API_BASE_URL, type Post } from '@/lib/api';
+import { ProfilePicture, PostCard, PostCardSkeleton } from '@/components';
 import { useUser } from '@/context/UserContext';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, updateUser } = useUser();
+  const { user, updateUser, logout } = useUser();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [postsLoading, setPostsLoading] = useState(true);
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -31,6 +34,16 @@ export default function ProfilePage() {
         setError('Failed to load profile');
       })
       .finally(() => setLoading(false));
+
+    // Fetch user's posts
+    fetch(`${API_BASE_URL}/posts/`, { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((allPosts: Post[]) => {
+        const userPosts = allPosts.filter((post) => post.user_id === userData.id);
+        setPosts(userPosts);
+      })
+      .catch(console.error)
+      .finally(() => setPostsLoading(false));
   }, [router, updateUser]);
 
   const handleUserUpdate = (updatedUser: User) => {
@@ -59,8 +72,9 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div className="max-w-4xl mx-auto">
+        {/* Profile Card */}
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden mb-8">
           {/* Cover Banner */}
           <div className="h-32 bg-gradient-to-r from-indigo-600 to-blue-600"></div>
           
@@ -74,7 +88,7 @@ export default function ProfilePage() {
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">{user.name}</h1>
             <p className="text-slate-600 dark:text-slate-400 mb-6">{user.email}</p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-slate-200 dark:border-slate-700 pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 border-t border-slate-200 dark:border-slate-700 pt-6">
               <div>
                 <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Member Since
@@ -85,14 +99,65 @@ export default function ProfilePage() {
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                  Total Posts
+                </h3>
+                <p className="text-slate-900 dark:text-white font-medium">
+                  {posts.length}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                   Account ID
                 </h3>
-                <p className="text-slate-900 dark:text-white font-medium font-mono text-sm">
+                <p className="text-slate-900 dark:text-white font-medium font-mono text-sm truncate">
                   {user.id}
                 </p>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* My Posts Section */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">My Posts</h2>
+            <Link
+              href="/posts/new"
+              className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition text-sm"
+            >
+              + New Post
+            </Link>
+          </div>
+
+          {postsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                <PostCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+              <div className="text-4xl mb-4">📝</div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+                No posts yet
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 mb-6">
+                Start sharing your thoughts with the community!
+              </p>
+              <Link
+                href="/posts/new"
+                className="inline-block px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition"
+              >
+                Create Your First Post
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {posts.map((post) => (
+                <PostCard key={post.id} post={post} authorName={user.name} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,18 +1,23 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Request
 from BACKEND.APP.models import UserCreate, UserLogin, UserResponse, UserUpdate
-from repositories.users import UserRepository
-from BACKEND.APP.db import get_database
-from motor.motor_asyncio import AsyncIOMotorDatabase
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
-async def get_repo(db: AsyncIOMotorDatabase = Depends(get_database)) -> UserRepository:
+def get_repo(request: Request):
+    """Get the appropriate repository based on DB_MODE"""
+    db = request.app.state.get_db()
+    
+    if request.app.state.db_mode == "supabase":
+        from repositories.users_supabase import UserRepository
+    else:
+        from repositories.users import UserRepository
+    
     return UserRepository(db)
 
 
 @router.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def signup(payload: UserCreate, repo: UserRepository = Depends(get_repo)):
+async def signup(payload: UserCreate, repo = Depends(get_repo)):
     user = await repo.create_user(payload.name, payload.email, payload.password)
     if not user:
         raise HTTPException(status_code=400, detail="Email already exists")
@@ -20,20 +25,20 @@ async def signup(payload: UserCreate, repo: UserRepository = Depends(get_repo)):
 
 
 @router.post("/login")
-async def login(payload: UserLogin, repo: UserRepository = Depends(get_repo)):
+async def login(payload: UserLogin, repo = Depends(get_repo)):
     user_doc = await repo.get_user_by_email(payload.email)
-    if not user_doc or not await repo.verify_password(payload.password, user_doc["password_hash"]):
+    if not user_doc or not await repo.verify_password(payload.password, user_doc.get("password_hash") or user_doc.get("password")):
         raise HTTPException(status_code=401, detail="Invalid email or password")
-    return {"id": str(user_doc["_id"]), "name": user_doc["name"], "email": user_doc["email"]}
+    return {"id": str(user_doc.get("_id") or user_doc.get("id")), "name": user_doc["name"], "email": user_doc["email"]}
 
 
 @router.get("/count", response_model=int)
-async def count_users(repo: UserRepository = Depends(get_repo)):
+async def count_users(repo = Depends(get_repo)):
     return await repo.count_users()
 
 
 @router.get("/{user_id}", response_model=UserResponse)
-async def get_user(user_id: str, repo: UserRepository = Depends(get_repo)):
+async def get_user(user_id: str, repo = Depends(get_repo)):
     user = await repo.get_user_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -41,7 +46,7 @@ async def get_user(user_id: str, repo: UserRepository = Depends(get_repo)):
 
 
 @router.put("/{user_id}", response_model=UserResponse)
-async def update_user(user_id: str, payload: UserUpdate, repo: UserRepository = Depends(get_repo)):
+async def update_user(user_id: str, payload: UserUpdate, repo = Depends(get_repo)):
     user = await repo.update_user(user_id, payload.dict(exclude_unset=True))
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -49,7 +54,7 @@ async def update_user(user_id: str, payload: UserUpdate, repo: UserRepository = 
 
 
 @router.delete("/{user_id}")
-async def delete_user(user_id: str, repo: UserRepository = Depends(get_repo)):
+async def delete_user(user_id: str, repo = Depends(get_repo)):
     """Delete a user account"""
     success = await repo.delete_user(user_id)
     if not success:

@@ -1,11 +1,9 @@
 # BACKEND/routers/posts.py
 
-from fastapi import APIRouter, HTTPException, Depends, Query, status, File, UploadFile
+from fastapi import APIRouter, HTTPException, Depends, Query, status, File, UploadFile, Request
 from typing import List
 from BACKEND.APP.models import PostCreate, PostResponse, PostUpdate
-from repositories.posts import PostRepository
-from BACKEND.APP.db import get_database
-from motor.motor_asyncio import AsyncIOMotorDatabase
+from BACKEND.APP.config import settings
 import shutil
 import os
 import uuid
@@ -13,7 +11,15 @@ import uuid
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
 
-async def get_repo(db: AsyncIOMotorDatabase = Depends(get_database)) -> PostRepository:
+def get_repo(request: Request):
+    """Get the appropriate repository based on DB_MODE"""
+    db = request.app.state.get_db()
+    
+    if request.app.state.db_mode == "supabase":
+        from repositories.posts_supabase import PostRepository
+    else:
+        from repositories.posts import PostRepository
+    
     return PostRepository(db)
 
 
@@ -35,17 +41,17 @@ async def upload_image(file: UploadFile = File(...)):
 
 
 @router.post("/", response_model=PostResponse, status_code=status.HTTP_201_CREATED)
-async def create_post(payload: PostCreate, repo: PostRepository = Depends(get_repo)):
+async def create_post(payload: PostCreate, repo = Depends(get_repo)):
     return await repo.create_post(payload.title, payload.content, payload.user_id, payload.tags, payload.image_url)
 
 
 @router.get("/count", response_model=int)
-async def count_posts(repo: PostRepository = Depends(get_repo)):
+async def count_posts(repo = Depends(get_repo)):
     return await repo.count_posts()
 
 
 @router.get("/{post_id}", response_model=PostResponse)
-async def read_post(post_id: str, repo: PostRepository = Depends(get_repo)):
+async def read_post(post_id: str, repo = Depends(get_repo)):
     post = await repo.get_post(post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
@@ -56,13 +62,13 @@ async def read_post(post_id: str, repo: PostRepository = Depends(get_repo)):
 async def list_posts(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
-    repo: PostRepository = Depends(get_repo),
+    repo = Depends(get_repo),
 ):
     return await repo.list_posts(skip=skip, limit=limit)
 
 
 @router.put("/{post_id}", response_model=PostResponse)
-async def update_post(post_id: str, payload: PostUpdate, repo: PostRepository = Depends(get_repo)):
+async def update_post(post_id: str, payload: PostUpdate, repo = Depends(get_repo)):
     post = await repo.update_post(post_id, payload.title, payload.content, payload.tags, payload.image_url)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found or invalid ID")
@@ -70,7 +76,7 @@ async def update_post(post_id: str, payload: PostUpdate, repo: PostRepository = 
 
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_post(post_id: str, repo: PostRepository = Depends(get_repo)):
+async def delete_post(post_id: str, repo = Depends(get_repo)):
     deleted = await repo.delete_post(post_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Post not found or invalid ID")
