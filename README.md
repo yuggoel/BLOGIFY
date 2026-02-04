@@ -2,51 +2,78 @@
 
 <p align="center"><i>Your space to write, express, and inspire.</i></p>
 
+<p align="center">
+  <a href="https://blogify-iota-seven.vercel.app/">🌐 Live Demo</a> •
+  <a href="#features">Features</a> •
+  <a href="#tech-stack">Tech Stack</a> •
+  <a href="#installation">Installation</a>
+</p>
+
 ---
 
-##  Introduction
+## 🚀 Live Demo
 
-Blogify is a simple and user-friendly platform where anyone can share their thoughts, ideas, and stories. No complicated menus, no messy tools — just a clean and smooth space to write, edit, and publish blogs instantly.
+**Frontend:** https://blogify-iota-seven.vercel.app/  
+**Backend API:** https://web-production-97fe.up.railway.app/
+
+---
+
+## 📖 Introduction
+
+Blogify is a modern, full-stack blogging platform where anyone can share their thoughts, ideas, and stories. Built with Next.js and FastAPI, it offers a clean, fast, and responsive experience for writers and readers alike.
 
 Whether you're a student, developer, writer, or someone who simply loves expressing ideas, Blogify makes blogging feel natural and enjoyable. Create your own account, write what matters to you, explore posts from others, and build your digital voice — all in one place.
 
 ---
 
-##  Features
+## ✨ Features
 
 ### Core Features
-- User signup & login  
-- Create, edit & delete blogs  
-- Clean and responsive UI  
-- Explore blogs from others  
-- Personal profile & dashboard
-- View other users' profiles
-- Real-time notifications
+- 🔐 User signup & login  
+- ✍️ Create, edit & delete blogs with **Markdown support**
+- 🎨 Clean and responsive UI (dark mode)
+- 📰 Explore blogs from others with pagination
+- 👤 Personal profile & dashboard
+- 🏷️ Tag-based post organization
+- 👥 View other users' profiles
 
 ### Additional Features
-- Edit profile details (name, email, password, bio, skills/tags, profile picture)
-- View all comments on a particular blog
-- Search posts using keywords from title or content
-- Search users by name or alphabet letters
+- Edit profile details (name, bio, profile picture)
+- Featured posts section on feed
+- Mobile-responsive design
+- Real-time form validation
 
 ---
 
-##  Tech Stack
+## 🛠️ Tech Stack
+
+### Frontend
+- **Next.js 16** - React framework with App Router
+- **TypeScript** - Type-safe JavaScript
+- **Tailwind CSS** - Utility-first CSS framework
+- **React Markdown** - Markdown rendering
 
 ### Backend
 - **Python FastAPI** - High-performance web framework
-- **MongoDB** - NoSQL database for storing users, posts, and comments
-- **Motor** - Async MongoDB driver for FastAPI
+- **Supabase PostgreSQL** - Cloud database (production)
+- **MongoDB** - NoSQL database (development)
+- **asyncpg** - Async PostgreSQL driver
 - **Pydantic** - Data validation and settings management
-- **Uvicorn** - ASGI server for running the application
+- **Uvicorn** - ASGI server
+
+### Deployment
+- **Vercel** - Frontend hosting
+- **Railway** - Backend hosting
+- **Supabase** - Database hosting
 
 ---
 
-##  Prerequisites
+## 📋 Prerequisites
 
 Before starting, make sure you have installed:
 
 - Git
+- Node.js 18+
 - Python 3.10+
 - MongoDB (Local or MongoDB Atlas)
 
@@ -80,11 +107,18 @@ pip install -r requirements.txt
 
 ### 3. Database Setup
 
-#### Install MongoDB
+#### Option A: Supabase (Recommended for Production)
+
+1. Create a free account at [supabase.com](https://supabase.com)
+2. Create a new project
+3. Go to **SQL Editor** and run the schema from `MIGRATION_GUIDE.md`
+4. Go to **Settings → Database** and copy the pooler connection string
+
+#### Option B: MongoDB (Local Development)
+
 Download & install MongoDB (Community Edition):
 https://www.mongodb.com/try/download/community
 
-#### Start MongoDB Service
 ```bash
 # Windows
 net start MongoDB
@@ -97,21 +131,37 @@ sudo systemctl start mongod
 ```
 
 #### Configure Environment Variables
-Create a `.env` file in the project root and add:
-```
-MONGODB_URI=mongodb://localhost:27017
-MONGODB_DB=blog_db
+Create a `.env` file in the project root:
+```env
+# For Supabase (production)
+DB_MODE=supabase
+DATABASE_URL=postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
+
+# For MongoDB (development)
+# DB_MODE=mongodb
+# MONGODB_URI=mongodb://localhost:27017
+# MONGODB_DB=blog_db
+
+# Frontend
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 ```
 
-### 4. Run the Backend Server
+### 4. Run the Application
+
+#### Backend
 ```bash
-cd BACKEND
-uvicorn APP.main:app --reload
+uvicorn BACKEND.APP.main:app --reload
 ```
+API: http://127.0.0.1:8000  
+Docs: http://127.0.0.1:8000/docs
 
-Your API will be live at: http://127.0.0.1:8000
-
-Swagger Docs (API testing): http://127.0.0.1:8000/docs
+#### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+App: http://localhost:3000
 
 ---
 
@@ -132,38 +182,68 @@ This will automatically:
 ##  API Endpoints
 
 ### Authentication
-- `POST /api/signup` - User registration
-- `POST /api/login` - User login
+- `POST /users/signup` - User registration
+- `POST /users/login` - User login
 
 ### Posts
-- `GET /api/posts` - Get all posts
-- `POST /api/posts` - Create a new post
-- `GET /api/posts/{id}` - Get a specific post
-- `PUT /api/posts/{id}` - Update a post
-- `DELETE /api/posts/{id}` - Delete a post
+- `GET /posts` - Get all posts (with pagination)
+- `GET /posts/count` - Get total post count
+- `POST /posts` - Create a new post
+- `GET /posts/{id}` - Get a specific post
+- `PUT /posts/{id}` - Update a post
+- `DELETE /posts/{id}` - Delete a post
+- `POST /posts/upload` - Upload an image
 
 ### Users
-- `GET /api/users` - Get all users
-- `GET /api/users/{id}` - Get a specific user
-- `PUT /api/users/{id}` - Update user profile
-- `DELETE /api/users/{id}` - Delete user account
+- `GET /users/count` - Get total user count
+- `GET /users/{id}` - Get a specific user
+- `PUT /users/{id}` - Update user profile
+- `DELETE /users/{id}` - Delete user account
 
 ---
 
-##  EXTERNAL SERVICES/LIBRARIES USED
+## 🚀 Deployment
+
+See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for detailed deployment instructions.
+
+### Quick Deploy
+
+**Backend (Railway):**
+1. Connect GitHub repo to Railway
+2. Set environment variables: `DB_MODE`, `DATABASE_URL`
+3. Deploy!
+
+**Frontend (Vercel):**
+1. Connect GitHub repo to Vercel
+2. Set root directory to `frontend`
+3. Set `NEXT_PUBLIC_API_URL` to your Railway URL
+4. Deploy!
+
+---
+
+##  External Services & Libraries
+
+### Frontend – Next.js
+
+- **Next.js 16** - React framework with App Router and server components
+- **React 19** - UI library for building user interfaces
+- **Tailwind CSS** - Utility-first CSS framework
+- **React Markdown** - Render markdown content in posts
+- **TypeScript** - Type-safe JavaScript
 
 ### Backend – Python FastAPI
 
-- **FastAPI (fastapi)** - Backend web framework to build REST APIs. Handles routing, request validation, authentication & data processing.
-- **Uvicorn (uvicorn)** - ASGI server used to run the FastAPI backend.
-- **Pydantic (pydantic)** - Used for data validation and defining schema models for requests/responses.
-- **Motor / PyMongo (motor or pymongo)** - MongoDB driver to interact with the database.
-  - motor = async MongoDB client used with FastAPI.
+- **FastAPI** - High-performance async web framework
+- **Uvicorn** - ASGI server for running the application
+- **Pydantic** - Data validation and schema models
+- **asyncpg** - Async PostgreSQL driver for Supabase
+- **Motor** - Async MongoDB driver (development)
+- **bcrypt** - Password hashing
 
-### DATABASE - MongoDB
+### Database
 
-- **MongoDB** - NoSQL database used to store users, posts, comments and other dynamic data for Blogify.
-- **MongoDB Compass / Atlas (if used)** - GUI or cloud MongoDB hosting platform for managing the database.
+- **Supabase PostgreSQL** (Production) - Cloud-hosted PostgreSQL
+- **MongoDB** (Development) - Local NoSQL database
 
 ---
 
