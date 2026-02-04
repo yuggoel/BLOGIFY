@@ -3,7 +3,7 @@
 <p align="center"><i>Your space to write, express, and inspire.</i></p>
 
 <p align="center">
-  <a href="https://blogify-iota-seven.vercel.app/">🌐 Live Demo</a> •
+  <a href="https://yuggoel-blogify.vercel.app/">🌐 Live Demo</a> •
   <a href="#features">Features</a> •
   <a href="#tech-stack">Tech Stack</a> •
   <a href="#installation">Installation</a>
@@ -13,7 +13,7 @@
 
 ## 🚀 Live Demo
 
-**Frontend:** https://blogify-iota-seven.vercel.app/  
+**Frontend:** https://yuggoel-blogify.vercel.app/  
 **Backend API:** https://web-production-97fe.up.railway.app/
 
 ---
