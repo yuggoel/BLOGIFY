@@ -1,4 +1,58 @@
+# Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.cache/
+
+# Node / Frontend
+node_modules/
+.next/
+dist/
+build/
+coverage/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets / local config
 .env
+.env.*
+secrets.*
+*.pem
+*.key
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+*-journal
+
+# Logs / temp
+*.log
+*.tmp
+tmp/
+logs/
+
+# Packaging
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+
+# Misc
+npm-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+/.pnp/.env
 .venv
 venv/
 __pycache__/

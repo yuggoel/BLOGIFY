@@ -1,3 +1,16 @@
+# Unwanted Files & .gitignore
+
+To keep your repository clean and secure, do not commit these files/folders (already in `.gitignore`):
+
+- `node_modules/`, `.next/`, `.env.local` (dependencies, build outputs, secrets)
+- Any `.DS_Store`, `Thumbs.db`, `*.log` (OS and log files)
+
+If you accidentally commit these, untrack them with:
+```bash
+git rm -r --cached <file-or-folder>
+```
+and commit the change.
+
 # Blogify Frontend - Comprehensive Documentation
 
 Welcome to the **Blogify Frontend** documentation!

@@ -202,22 +202,47 @@ This will automatically:
 
 ---
 
-## 🚀 Deployment
+
+## 🚀 Deployment & Best Practices
 
 See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for detailed deployment instructions.
 
-### Quick Deploy
+### Quick Deploy (Cloud)
 
 **Backend (Railway):**
-1. Connect GitHub repo to Railway
-2. Set environment variables: `DB_MODE`, `DATABASE_URL`
+1. Connect your GitHub repo to Railway.
+2. Set environment variables: `DB_MODE`, `DATABASE_URL` (see `.env.example`).
 3. Deploy!
 
 **Frontend (Vercel):**
-1. Connect GitHub repo to Vercel
-2. Set root directory to `frontend`
-3. Set `NEXT_PUBLIC_API_URL` to your Railway URL
+1. Connect your GitHub repo to Vercel.
+2. Set root directory to `frontend`.
+3. Set `NEXT_PUBLIC_API_URL` to your deployed backend URL.
 4. Deploy!
+
+### Local Development
+
+1. Clone the repo and follow the backend and frontend setup steps above.
+2. Use `start_app.bat` (Windows) or `start_app.ps1` (PowerShell) to launch both servers at once.
+3. Access the app at http://localhost:3000
+
+---
+
+## 🧹 Unwanted Files & .gitignore Policy
+
+To keep your repository clean and secure, **do not commit these files/folders** (already in `.gitignore`):
+
+- `.venv/`, `node_modules/`, `frontend/node_modules/`, `frontend/.next/` (build outputs, dependencies)
+- All `__pycache__/` folders and `*.pyc` files (Python bytecode caches)
+- `.env`, `BACKEND/APP/.env`, `frontend/.env.local` (environment variable files—never commit secrets)
+- Any `.DS_Store`, `Thumbs.db` (OS metadata files)
+- Any `*.log`, `*.db`, `*.sqlite3` (logs, local databases)
+
+If you accidentally commit these, untrack them with:
+```bash
+git rm -r --cached <file-or-folder>
+```
+and commit the change.
 
 ---
 
