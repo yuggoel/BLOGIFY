@@ -63,11 +63,27 @@ export interface LoginResponse {
 
 // Posts
 export async function getPosts(skip = 0, limit = 20): Promise<Post[]> {
-  const res = await fetch(`${API_BASE_URL}/posts/?skip=${skip}&limit=${limit}`, {
-    cache: 'no-store',
-  });
-  if (!res.ok) throw new Error('Failed to fetch posts');
-  return res.json();
+  const url = `${API_BASE_URL}/posts/?skip=${skip}&limit=${limit}`;
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) {
+      const text = await res.text().catch(() => res.statusText || '');
+      throw new Error(`${res.status} ${res.statusText} ${text}`.trim());
+    }
+    const data = await res.json();
+    try {
+      // cache posts locally for offline fallback
+      localStorage.setItem('posts_cache', JSON.stringify(data));
+    } catch {}
+    return data;
+  } catch (err: any) {
+    // try to return cached posts if available
+    try {
+      const cached = localStorage.getItem('posts_cache');
+      if (cached) return JSON.parse(cached) as Post[];
+    } catch {}
+    throw new Error(err?.message || 'Failed to fetch posts');
+  }
 }
 
 export async function getPost(id: string): Promise<Post> {

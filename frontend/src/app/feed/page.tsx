@@ -12,25 +12,6 @@ export default function FeedPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useUser();
-
-  // If not authenticated, show login/signup prompt
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center py-12 px-4">
-        <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-3xl">B</span>
-          </div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Welcome to Blogify</h1>
-          <p className="text-slate-600 dark:text-slate-300 mb-6">Please log in or sign up to view the feed.</p>
-          <div className="flex gap-4 justify-center">
-            <a href="/login" className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition">Login</a>
-            <a href="/signup" className="px-6 py-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-semibold rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition">Sign Up</a>
-          </div>
-        </div>
-      </div>
-    );
-  }
   
   const [posts, setPosts] = useState<Post[]>([]);
   const [authors, setAuthors] = useState<Record<string, string>>({});
@@ -69,9 +50,11 @@ export default function FeedPage() {
         );
         
         setAuthors(authorMap);
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
-        setError("Failed to load feed");
+        // show more descriptive error when available
+        const msg = err?.message || 'Failed to load feed';
+        setError(msg.includes('Failed to fetch') ? 'Unable to reach API. Please try again.' : msg);
       } finally {
         setLoading(false);
       }
@@ -89,11 +72,38 @@ export default function FeedPage() {
   };
 
   if (error) {
+    const handleRetry = () => {
+      setError('');
+      setLoading(true);
+      // trigger fetch by updating page param: call effect by setting same page
+      const evt = new Event('retryFeed');
+      window.dispatchEvent(evt);
+      setTimeout(() => setLoading(false), 500);
+    };
+
+    const cached = typeof window !== 'undefined' ? localStorage.getItem('posts_cache') : null;
+
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
-          {error}
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-4">
+          <div className="font-semibold">{error}</div>
+          <div className="text-sm mt-1">Please check your network or try again.</div>
         </div>
+        <div className="flex gap-3">
+          <button onClick={handleRetry} className="px-4 py-2 bg-indigo-600 text-white rounded">Retry</button>
+          <a href="/login" className="px-4 py-2 border rounded">Login</a>
+          <a href="/signup" className="px-4 py-2 border rounded">Sign Up</a>
+        </div>
+        {cached && (
+          <div className="mt-6">
+            <h3 className="font-semibold mb-2">Cached posts (offline)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {JSON.parse(cached).slice(0, 4).map((p: Post) => (
+                <PostCard key={p.id} post={p} authorName={p.user_id} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
