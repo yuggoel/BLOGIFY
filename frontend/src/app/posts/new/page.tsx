@@ -11,6 +11,25 @@ export default function NewPostPage() {
   const { user } = useUser();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // If not authenticated, show login/signup prompt
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center py-12 px-4">
+        <div className="max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-white font-bold text-3xl">B</span>
+          </div>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Welcome to Blogify</h1>
+          <p className="text-slate-600 dark:text-slate-300 mb-6">Please log in or sign up to create a post.</p>
+          <div className="flex gap-4 justify-center">
+            <a href="/login" className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition">Login</a>
+            <a href="/signup" className="px-6 py-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-semibold rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition">Sign Up</a>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
