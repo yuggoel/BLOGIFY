@@ -3,8 +3,17 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from routers import posts, users
-from .config import settings
+import sys
+from pathlib import Path
+
+# Ensure repository root is on sys.path so top-level packages (e.g. `routers`)
+# can be imported when running the app from BACKEND/APP.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from routers import posts, users, auth
+from config import settings
 import os
 
 # Global database connection
@@ -39,9 +48,6 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Blog Backend", lifespan=lifespan)
-from routers import auth, protected
-from auth import get_current_user
-from fastapi import Depends
 
 
 def get_db():
@@ -61,26 +67,6 @@ app.state.db_mode = settings.DB_MODE
 def root():
     return {"status": "Backend running", "db_mode": settings.DB_MODE}
 
-def public_routes():
-    return ["/login", "/register", "/"]
-
-@app.middleware("http")
-async def enforce_auth(request, call_next):
-    path = request.url.path
-    if path not in public_routes():
-        try:
-            # Extract token from Authorization header
-            token = request.headers.get("Authorization")
-            if not token or not token.startswith("Bearer "):
-                from fastapi.responses import JSONResponse
-                return JSONResponse(status_code=401, content={"detail": "Not authenticated"})
-            token = token.split(" ", 1)[1]
-            get_current_user(token)
-        except Exception:
-            from fastapi.responses import JSONResponse
-            return JSONResponse(status_code=401, content={"detail": "Invalid or missing token"})
-    response = await call_next(request)
-    return response
 
 # Create static directory if it doesn't exist
 os.makedirs("static/images", exist_ok=True)
@@ -98,7 +84,6 @@ app.add_middleware(
 )
 
 # Register routers
-app.include_router(auth.router)
-app.include_router(protected.router)
 app.include_router(posts.router)
 app.include_router(users.router)
+app.include_router(auth.router)
