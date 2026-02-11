@@ -156,3 +156,5 @@ Icon\r
 # Static files
 static/
 BACKEND/static/
+.vercel
+.env*.local

@@ -39,6 +39,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Blog Backend", lifespan=lifespan)
+from routers import auth, protected
+from auth import get_current_user
+from fastapi import Depends
 
 
 def get_db():
@@ -58,6 +61,26 @@ app.state.db_mode = settings.DB_MODE
 def root():
     return {"status": "Backend running", "db_mode": settings.DB_MODE}
 
+def public_routes():
+    return ["/login", "/register", "/"]
+
+@app.middleware("http")
+async def enforce_auth(request, call_next):
+    path = request.url.path
+    if path not in public_routes():
+        try:
+            # Extract token from Authorization header
+            token = request.headers.get("Authorization")
+            if not token or not token.startswith("Bearer "):
+                from fastapi.responses import JSONResponse
+                return JSONResponse(status_code=401, content={"detail": "Not authenticated"})
+            token = token.split(" ", 1)[1]
+            get_current_user(token)
+        except Exception:
+            from fastapi.responses import JSONResponse
+            return JSONResponse(status_code=401, content={"detail": "Invalid or missing token"})
+    response = await call_next(request)
+    return response
 
 # Create static directory if it doesn't exist
 os.makedirs("static/images", exist_ok=True)
@@ -75,5 +98,7 @@ app.add_middleware(
 )
 
 # Register routers
+app.include_router(auth.router)
+app.include_router(protected.router)
 app.include_router(posts.router)
 app.include_router(users.router)
