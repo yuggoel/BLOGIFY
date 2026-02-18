@@ -1,5 +1,36 @@
 import { supabase } from './supabase';
 
+// ── FastAPI base URL ───────────────────────────────────────────────────────────
+// Set NEXT_PUBLIC_API_URL in .env.local for local dev and in Vercel for production.
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000';
+
+/**
+ * Attaches the current Supabase JWT as a Bearer token.
+ * All FastAPI data routes require this header.
+ */
+async function authHeaders(): Promise<HeadersInit> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new Error('Not authenticated');
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${session.access_token}`,
+  };
+}
+
+/**
+ * Wrapper around fetch that throws on non-2xx responses.
+ */
+async function apiFetch<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, options);
+  if (res.status === 204) return undefined as T;
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail ?? json.error ?? 'Request failed');
+  return json as T;
+}
+
 // ── Types ──────────────────────────────────────────────────────────────────────
 export interface User {
   id: string;
@@ -84,77 +115,45 @@ function mapPost(row: any): Post {
 
 // ── Posts ──────────────────────────────────────────────────────────────────────
 export async function getPosts(skip = 0, limit = 20, userId?: string): Promise<Post[]> {
-  let query = supabase
-    .from('posts')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .range(skip, skip + limit - 1);
-
-  if (userId) query = query.eq('user_id', userId);
-
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return (data ?? []).map(mapPost);
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) });
+  if (userId) params.set('user_id', userId);
+  const rows = await apiFetch<Post[]>(`/posts?${params}`);
+  return rows.map(mapPost);
 }
 
 export async function getPost(id: string): Promise<Post> {
-  const { data, error } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('id', id)
-    .single();
-  if (error) throw new Error('Post not found');
-  return mapPost(data);
+  const row = await apiFetch<Post>(`/posts/${id}`);
+  return mapPost(row);
 }
 
 export async function createPost(data: PostCreate): Promise<Post> {
-  // Ensure we have an active session before attempting insert (RLS requires auth.uid())
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData.session) throw new Error('You must be logged in to create a post');
-
-  const { data: row, error } = await supabase
-    .from('posts')
-    .insert({
-      title: data.title,
-      content: data.content,
-      user_id: data.user_id,
-      tags: data.tags ?? [],
-      image_url: data.image_url ?? null,
-    })
-    .select()
-    .single();
-  if (error) throw new Error(error.message);
+  const headers = await authHeaders();
+  const row = await apiFetch<Post>('/posts', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(data),
+  });
   return mapPost(row);
 }
 
 export async function updatePost(id: string, data: PostUpdate): Promise<Post> {
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData.session) throw new Error('You must be logged in to update a post');
-
-  const { data: row, error } = await supabase
-    .from('posts')
-    .update({ ...data, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select()
-    .single();
-  if (error) throw new Error(error.message);
+  const headers = await authHeaders();
+  const row = await apiFetch<Post>(`/posts/${id}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(data),
+  });
   return mapPost(row);
 }
 
 export async function deletePost(id: string): Promise<void> {
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData.session) throw new Error('You must be logged in to delete a post');
-
-  const { error } = await supabase.from('posts').delete().eq('id', id);
-  if (error) throw new Error(error.message);
+  const headers = await authHeaders();
+  await apiFetch<void>(`/posts/${id}`, { method: 'DELETE', headers });
 }
 
 export async function getPostCount(): Promise<number> {
-  const { count, error } = await supabase
-    .from('posts')
-    .select('*', { count: 'exact', head: true });
-  if (error) throw new Error(error.message);
-  return count ?? 0;
+  const data = await apiFetch<{ count: number }>('/posts/count');
+  return data.count;
 }
 
 export async function uploadImage(file: File): Promise<string> {
@@ -204,48 +203,33 @@ export async function login(data: UserLogin): Promise<LoginResponse> {
 }
 
 export async function getUser(id: string): Promise<User> {
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', id)
-    .maybeSingle();
-  if (error || !data) throw new Error('User not found');
-  return mapUser(data);
+  const row = await apiFetch<User>(`/users/${id}`);
+  return mapUser(row);
 }
 
 export async function updateUser(id: string, data: UserUpdate): Promise<User> {
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData.session) throw new Error('You must be logged in to update your profile');
+  const headers = await authHeaders();
+  const payload: Record<string, unknown> = {};
+  if (data.name !== undefined) payload.name = data.name;
+  if (data.email !== undefined) payload.email = data.email;
+  if (data.profile_picture_url !== undefined) payload.profile_picture_url = data.profile_picture_url;
 
-  const update: Record<string, any> = { updated_at: new Date().toISOString() };
-  if (data.name !== undefined) update.name = data.name;
-  if (data.email !== undefined) update.email = data.email;
-  if (data.profile_picture_url !== undefined) update.profile_picture = data.profile_picture_url;
-
-  const { data: row, error } = await supabase
-    .from('users')
-    .update(update)
-    .eq('id', id)
-    .select()
-    .single();
-  if (error) throw new Error(error.message);
+  const row = await apiFetch<User>(`/users/${id}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(payload),
+  });
   return mapUser(row);
 }
 
 export async function deleteUser(id: string): Promise<void> {
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData.session) throw new Error('You must be logged in to delete your account');
-
-  const { error } = await supabase.from('users').delete().eq('id', id);
-  if (error) throw new Error(error.message);
+  const headers = await authHeaders();
+  await apiFetch<void>(`/users/${id}`, { method: 'DELETE', headers });
 }
 
 export async function getUserCount(): Promise<number> {
-  const { count, error } = await supabase
-    .from('users')
-    .select('*', { count: 'exact', head: true });
-  if (error) throw new Error(error.message);
-  return count ?? 0;
+  const data = await apiFetch<{ count: number }>('/users/count');
+  return data.count;
 }
 
 // ── Utilities ──────────────────────────────────────────────────────────────────
