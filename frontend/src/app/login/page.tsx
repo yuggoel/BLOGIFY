@@ -12,7 +12,8 @@ const COOLDOWNS = [10, 20, 40, 80, 160, 300];
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  useUser(); // keep context alive  const [email, setEmail] = useState('');
+  useUser(); // keep context alive
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
