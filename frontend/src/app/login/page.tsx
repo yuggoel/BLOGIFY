@@ -1,20 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { login as apiLogin } from '@/lib/api';
 import { useUser } from '@/context/UserContext';
 
+// Exponential back-off: 10s, 20s, 40s … capped at 5 min
+const COOLDOWNS = [10, 20, 40, 80, 160, 300];
+
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  useUser(); // keep context alive
-  const [email, setEmail] = useState('');
+  useUser(); // keep context alive  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0); // seconds remaining
+  const failCount = useRef(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (searchParams.get('registered') === 'true') {
@@ -22,17 +27,35 @@ export default function LoginPage() {
     }
   }, [searchParams]);
 
+  // Count down the cooldown every second
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    timerRef.current = setInterval(() => {
+      setCooldown((s) => {
+        if (s <= 1) { clearInterval(timerRef.current!); return 0; }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timerRef.current!);
+  }, [cooldown]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (cooldown > 0) return;
     setError('');
     setSuccess('');
     setLoading(true);
 
     try {
       await apiLogin({ email, password });
-      // onAuthStateChange in UserContext will set the user automatically.
-      router.push('/feed');
+      failCount.current = 0;
+      // Redirect to intended page (from middleware returnTo param) or feed
+      const returnTo = searchParams.get('returnTo') ?? '/feed';
+      router.push(decodeURIComponent(returnTo));
     } catch (err) {
+      failCount.current += 1;
+      const wait = COOLDOWNS[Math.min(failCount.current - 1, COOLDOWNS.length - 1)];
+      setCooldown(wait);
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setLoading(false);
@@ -97,10 +120,10 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || cooldown > 0}
               className="w-full py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 disabled:opacity-50 transition"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? 'Signing in...' : cooldown > 0 ? `Try again in ${cooldown}s` : 'Sign in'}
             </button>
           </div>
         </form>

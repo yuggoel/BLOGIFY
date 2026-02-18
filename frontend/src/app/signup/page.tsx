@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signup } from '@/lib/api';
+
+const COOLDOWNS = [10, 20, 40, 80, 160, 300];
 
 export default function SignupPage() {
   const router = useRouter();
@@ -13,9 +15,24 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const failCount = useRef(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    timerRef.current = setInterval(() => {
+      setCooldown((s) => {
+        if (s <= 1) { clearInterval(timerRef.current!); return 0; }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timerRef.current!);
+  }, [cooldown]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (cooldown > 0) return;
     setError('');
 
     if (password !== confirmPassword) {
@@ -32,8 +49,12 @@ export default function SignupPage() {
 
     try {
       await signup({ name, email, password });
+      failCount.current = 0;
       router.push('/login?registered=true');
     } catch (err) {
+      failCount.current += 1;
+      const wait = COOLDOWNS[Math.min(failCount.current - 1, COOLDOWNS.length - 1)];
+      setCooldown(wait);
       setError(err instanceof Error ? err.message : 'Signup failed');
     } finally {
       setLoading(false);
@@ -123,10 +144,10 @@ export default function SignupPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || cooldown > 0}
               className="w-full py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 disabled:opacity-50 transition"
             >
-              {loading ? 'Creating account...' : 'Create account'}
+              {loading ? 'Creating account...' : cooldown > 0 ? `Try again in ${cooldown}s` : 'Create account'}
             </button>
           </div>
         </form>

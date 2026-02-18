@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getPost, updatePost, uploadImage, Post } from '@/lib/api';
 import { useUser } from '@/context/UserContext';
+import { RequireAuth } from '@/components';
 
-export default function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
+function EditPostContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const { user } = useUser();
@@ -257,4 +258,8 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
       </div>
     </div>
   );
+}
+
+export default function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
+  return <RequireAuth><EditPostContent params={params} /></RequireAuth>;
 }

@@ -1,24 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getPosts, formatDate, type Post, type User } from '@/lib/api';
-import { ProfilePicture, PostCard, PostCardSkeleton } from '@/components';
+import { ProfilePicture, PostCard, PostCardSkeleton, RequireAuth } from '@/components';
 import { useUser } from '@/context/UserContext';
 
-export default function ProfilePage() {
-  const router = useRouter();
-  const { user, updateUser, logout, loading } = useUser();
+function ProfileContent() {
+  const { user, updateUser, logout } = useUser();
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [loading, user, router]);
 
   // Fetch this user's posts
   useEffect(() => {
@@ -33,14 +24,6 @@ export default function ProfilePage() {
   const handleUserUpdate = (updatedUser: User) => {
     updateUser(updatedUser);
   };
-
-  if (loading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -134,4 +117,8 @@ export default function ProfilePage() {
       </div>
     </div>
   );
+}
+
+export default function ProfilePage() {
+  return <RequireAuth><ProfileContent /></RequireAuth>;
 }

@@ -7,6 +7,7 @@ export { default as Skeleton, PostCardSkeleton } from './Skeleton';
 export { default as ProfilePicture } from './ProfilePicture';
 export { default as DeletePostButton } from './DeletePostButton';
 export { default as EditPostButton } from './EditPostButton';
+export { default as RequireAuth } from './RequireAuth';
 
 
 

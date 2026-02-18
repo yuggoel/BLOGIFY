@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createPost, uploadImage } from '@/lib/api';
 import { useUser } from '@/context/UserContext';
+import { RequireAuth } from '@/components';
 
-export default function NewPostPage() {
+function NewPostContent() {
   const router = useRouter();
   const { user } = useUser();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -221,4 +222,8 @@ export default function NewPostPage() {
       </div>
     </div>
   );
+}
+
+export default function NewPostPage() {
+  return <RequireAuth><NewPostContent /></RequireAuth>;
 }

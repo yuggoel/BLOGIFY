@@ -166,45 +166,40 @@ export async function uploadImage(file: File): Promise<string> {
 
 // ── Users ──────────────────────────────────────────────────────────────────────
 export async function signup(data: UserCreate): Promise<User> {
-  const { data: authData, error } = await supabase.auth.signUp({
-    email: data.email,
-    password: data.password,
-    options: { data: { name: data.name } },
+  const res = await fetch('/api/auth/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
   });
-  if (error) throw new Error(error.message);
-  if (!authData.user) throw new Error('Signup failed');
-
-  // The DB trigger handles inserting the profile row.
-  // Return a minimal user object from auth data directly —
-  // no DB call needed here (avoids permission errors before session is active).
-  return {
-    id: authData.user.id,
-    name: data.name,
-    email: data.email,
-    created_at: authData.user.created_at,
-  };
+  const json = await res.json();
+  if (!res.ok) {
+    if (res.status === 429) throw new Error('Too many signup attempts. Please wait a minute.');
+    throw new Error(json.error ?? 'Signup failed');
+  }
+  return json as User;
 }
 
 export async function login(data: UserLogin): Promise<LoginResponse> {
-  const { data: authData, error } = await supabase.auth.signInWithPassword({
-    email: data.email,
-    password: data.password,
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
   });
-  if (error) throw new Error(error.message);
+  const json = await res.json();
+  if (!res.ok) {
+    if (res.status === 429) throw new Error('Too many login attempts. Please wait a minute.');
+    throw new Error(json.error ?? 'Login failed');
+  }
 
-  // Fetch profile — now the user is authenticated so RLS passes.
-  // Fall back to auth data if the profile row isn't ready yet.
-  const { data: profile } = await supabase
-    .from('users')
-    .select('id, name, email')
-    .eq('id', authData.user.id)
-    .maybeSingle();
+  // Restore the Supabase session client-side so onAuthStateChange fires
+  if (json.access_token && json.refresh_token) {
+    await supabase.auth.setSession({
+      access_token: json.access_token,
+      refresh_token: json.refresh_token,
+    });
+  }
 
-  return {
-    id: authData.user.id,
-    name: profile?.name ?? data.email.split('@')[0],
-    email: authData.user.email!,
-  };
+  return { id: json.id, name: json.name, email: json.email };
 }
 
 export async function getUser(id: string): Promise<User> {
