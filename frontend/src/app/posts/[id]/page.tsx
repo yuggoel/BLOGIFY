@@ -15,27 +15,29 @@ interface PostPageProps {
 
 export default async function PostPage({ params }: PostPageProps) {
   const { id } = await params;
-  // ...existing code...
-  // Add authentication check
-  const { user } = useUser();
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center py-12 px-4">
-        <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-3xl">B</span>
-          </div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Welcome to Blogify</h1>
-          <p className="text-slate-600 dark:text-slate-300 mb-6">Please log in or sign up to view posts.</p>
-          <div className="flex gap-4 justify-center">
-            <a href="/login" className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition">Login</a>
-            <a href="/signup" className="px-6 py-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-semibold rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition">Sign Up</a>
-          </div>
-        </div>
-      </div>
-    );
+  
+  let post: Post;
+  let author: User | null = null;
+
+  try {
+    post = await getPost(id);
+    if (post.user_id) {
+      try {
+        author = await getUser(post.user_id);
+      } catch {
+        author = null;
+      }
+    }
+  } catch {
+    notFound();
   }
-  // ...existing code...
+
+  const formattedDate = formatDate(post.created_at);
+  const readTime = calculateReadTime(post.content);
+  const imageUrl = getImageUrl(post.image_url);
+
+  return (
+    <div className="container mx-auto px-4 py-12 max-w-[720px]">
       <article>
         {/* Back Link */}
         <Link
@@ -101,12 +103,12 @@ export default async function PostPage({ params }: PostPageProps) {
         <div className="prose prose-lg prose-slate max-w-none
           prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-900
           prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6
-          prose-p:text-[18px] prose-p:leading-[1.8] prose-p:text-slate-800 prose-p:mb-6 dark:prose-p:text-slate-100
+          prose-p:text-[18px] prose-p:leading-[1.8] prose-p:text-slate-800 prose-p:mb-6
           prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline
           prose-img:rounded-lg prose-img:shadow-md prose-img:my-8 prose-img:w-full
           prose-code:text-indigo-600 prose-code:bg-indigo-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
           prose-pre:bg-slate-900 prose-pre:text-slate-50
-          prose-strong:text-slate-900 prose-li:text-slate-800 dark:prose-li:text-slate-100
+          prose-strong:text-slate-900 prose-li:text-slate-800
         ">
           <ReactMarkdown
             remarkPlugins={[remarkMath, remarkUnwrapImages]}

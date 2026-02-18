@@ -3,91 +3,44 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getUser, User, formatDate, API_BASE_URL, type Post } from '@/lib/api';
+import { getPosts, formatDate, type Post, type User } from '@/lib/api';
 import { ProfilePicture, PostCard, PostCardSkeleton } from '@/components';
 import { useUser } from '@/context/UserContext';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, updateUser, logout } = useUser();
-
-  // If not authenticated, show login/signup prompt
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center py-12 px-4">
-        <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-3xl">B</span>
-          </div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Welcome to Blogify</h1>
-          <p className="text-slate-600 dark:text-slate-300 mb-6">Please log in or sign up to view your profile.</p>
-          <div className="flex gap-4 justify-center">
-            <a href="/login" className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition">Login</a>
-            <a href="/signup" className="px-6 py-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-semibold rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition">Sign Up</a>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { user, updateUser, logout, loading } = useUser();
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
 
+  // Redirect to login if not authenticated
   useEffect(() => {
-    const userStr = localStorage.getItem('user');
-    if (!userStr) {
+    if (!loading && !user) {
       router.push('/login');
-      return;
     }
+  }, [loading, user, router]);
 
-    const userData = JSON.parse(userStr);
-    
-    // Fetch fresh user data
-    getUser(userData.id)
-      .then((freshUser) => {
-        updateUser(freshUser);
-      })
-      .catch((err) => {
-        console.error(err);
-        setError('Failed to load profile');
-      })
-      .finally(() => setLoading(false));
-
-    // Fetch user's posts
-    fetch(`${API_BASE_URL}/posts/`, { cache: 'no-store' })
-      .then((res) => res.json())
-      .then((allPosts: Post[]) => {
-        const userPosts = allPosts.filter((post) => post.user_id === userData.id);
-        setPosts(userPosts);
-      })
+  // Fetch this user's posts
+  useEffect(() => {
+    if (!user) return;
+    setPostsLoading(true);
+    getPosts(0, 1000, user.id)
+      .then(setPosts)
       .catch(console.error)
       .finally(() => setPostsLoading(false));
-  }, [router, updateUser]);
+  }, [user]);
 
   const handleUserUpdate = (updatedUser: User) => {
     updateUser(updatedUser);
   };
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
       </div>
     );
   }
-
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
-          {error}
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) return null;
 
   return (
     <div className="container mx-auto px-4 py-12">

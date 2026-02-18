@@ -55,9 +55,8 @@ Whether you're a student, developer, writer, or someone who simply loves express
 
 ### Backend
 - **Python FastAPI** - High-performance web framework
-- **Supabase PostgreSQL** - Cloud database (production)
-- **MongoDB** - NoSQL database (development)
-- **asyncpg** - Async PostgreSQL driver
+- **MongoDB** - NoSQL database (production)
+- **Motor (async MongoDB driver)** - Async MongoDB driver used by the backend
 - **Pydantic** - Data validation and settings management
 - **Uvicorn** - ASGI server
 
@@ -107,40 +106,17 @@ pip install -r requirements.txt
 
 ### 3. Database Setup
 
-#### Option A: Supabase (Recommended for Production)
+#### MongoDB (recommended)
 
-1. Create a free account at [supabase.com](https://supabase.com)
-2. Create a new project
-3. Go to **SQL Editor** and run the schema from `MIGRATION_GUIDE.md`
-4. Go to **Settings → Database** and copy the pooler connection string
+Use MongoDB for both development and production. You can host on MongoDB Atlas or run a local MongoDB instance.
 
-#### Option B: MongoDB (Local Development)
+Download & install MongoDB (Community Edition) or create a free Atlas cluster:
+https://www.mongodb.com/try
 
-Download & install MongoDB (Community Edition):
-https://www.mongodb.com/try/download/community
-
-```bash
-# Windows
-net start MongoDB
-
-# macOS
-brew services start mongodb-community@6.0
-
-# Linux
-sudo systemctl start mongod
-```
-
-#### Configure Environment Variables
-Create a `.env` file in the project root:
+Example `.env`:
 ```env
-# For Supabase (production)
-DB_MODE=supabase
-DATABASE_URL=postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
-
-# For MongoDB (development)
-# DB_MODE=mongodb
-# MONGODB_URI=mongodb://localhost:27017
-# MONGODB_DB=blog_db
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DB=blog_db
 
 # Frontend
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
@@ -211,7 +187,7 @@ See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for detailed deployment instruction
 
 **Backend (Railway):**
 1. Connect your GitHub repo to Railway.
-2. Set environment variables: `DB_MODE`, `DATABASE_URL` (see `.env.example`).
+2. Set environment variables: `MONGODB_URI`, `MONGODB_DB` (see `.env.example`).
 3. Deploy!
 
 **Frontend (Vercel):**

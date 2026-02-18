@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-import { getUser, formatDate, getImageUrl, API_BASE_URL, type User, type Post } from '@/lib/api';
+import { getUser, getPosts, formatDate, getImageUrl, type User, type Post } from '@/lib/api';
 import { PostCard, PostCardSkeleton } from '@/components';
 import { notFound } from 'next/navigation';
 
@@ -12,25 +12,6 @@ interface UserProfilePageProps {
 
 export default function UserProfilePage({ params }: UserProfilePageProps) {
   const { id } = use(params);
-  const { user } = useUser();
-  // If not authenticated, show login/signup prompt
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center py-12 px-4">
-        <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-3xl">B</span>
-          </div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Welcome to Blogify</h1>
-          <p className="text-slate-600 dark:text-slate-300 mb-6">Please log in or sign up to view user profiles.</p>
-          <div className="flex gap-4 justify-center">
-            <a href="/login" className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition">Login</a>
-            <a href="/signup" className="px-6 py-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-semibold rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition">Sign Up</a>
-          </div>
-        </div>
-      </div>
-    );
-  }
   
   const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -45,16 +26,10 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
         const userData = await getUser(id);
         setUser(userData);
         
-        // Fetch user's posts
-        const res = await fetch(`${API_BASE_URL}/posts/`, {
-          cache: 'no-store',
-        });
-        
-        if (res.ok) {
-          const allPosts: Post[] = await res.json();
-          const userPosts = allPosts.filter((post) => post.user_id === id);
-          setPosts(userPosts);
-        }
+        // Fetch user's posts (use lib helper)
+        const allPosts = await getPosts(0, 1000);
+        const userPosts = allPosts.filter((post) => post.user_id === id);
+        setPosts(userPosts);
       } catch (err) {
         console.error(err);
         setError('User not found');

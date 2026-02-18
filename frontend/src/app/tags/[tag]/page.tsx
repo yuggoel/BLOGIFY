@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { API_BASE_URL, getUser, type Post } from '@/lib/api';
+import { getPosts, getUser, type Post } from '@/lib/api';
 import { PostCard, PostCardSkeleton } from '@/components';
 
 interface TagPageProps {
@@ -12,25 +12,6 @@ interface TagPageProps {
 
 export default function TagPage({ params }: TagPageProps) {
   const { tag } = use(params);
-  const { user } = useUser();
-  // If not authenticated, show login/signup prompt
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center py-12 px-4">
-        <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-3xl">B</span>
-          </div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Welcome to Blogify</h1>
-          <p className="text-slate-600 dark:text-slate-300 mb-6">Please log in or sign up to view tagged posts.</p>
-          <div className="flex gap-4 justify-center">
-            <a href="/login" className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition">Login</a>
-            <a href="/signup" className="px-6 py-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-semibold rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition">Sign Up</a>
-          </div>
-        </div>
-      </div>
-    );
-  }
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -46,14 +27,7 @@ export default function TagPage({ params }: TagPageProps) {
       setLoading(true);
       try {
         // Fetch all posts and filter by tag on client side
-        // In a real app, you'd have a backend endpoint for this
-        const res = await fetch(`${API_BASE_URL}/posts/`, {
-          cache: 'no-store',
-        });
-        
-        if (!res.ok) throw new Error('Failed to fetch posts');
-        
-        const allPosts: Post[] = await res.json();
+        const allPosts: Post[] = await getPosts(0, 1000);
         const filteredPosts = allPosts.filter((post) =>
           post.tags.some((t) => t.toLowerCase() === decodedTag.toLowerCase())
         );
