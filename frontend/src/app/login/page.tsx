@@ -1,25 +1,34 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { login as apiLogin } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { useUser } from '@/context/UserContext';
 
-// Exponential back-off: 10s, 20s, 40s … capped at 5 min
+// Exponential back-off cooldowns in seconds
 const COOLDOWNS = [10, 20, 40, 80, 160, 300];
 
 export default function LoginPage() {
   const searchParams = useSearchParams();
-  useUser(); // keep context alive
+  const router = useRouter();
+  const { user, loading: authLoading } = useUser();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const [cooldown, setCooldown] = useState(0); // seconds remaining
+  const [cooldown, setCooldown] = useState(0);
   const failCount = useRef(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Redirect already-logged-in users away from /login
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace('/feed');
+    }
+  }, [authLoading, user, router]);
 
   useEffect(() => {
     if (searchParams.get('registered') === 'true') {
@@ -46,20 +55,29 @@ export default function LoginPage() {
     setSuccess('');
     setLoading(true);
 
-    let navigating = false;
     try {
-      await apiLogin({ email, password });
+      // Call Supabase directly — this fires onAuthStateChange(SIGNED_IN)
+      // which updates UserContext. We then navigate after confirming success.
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) throw new Error('Invalid email or password');
+
       failCount.current = 0;
-      navigating = true;
-      const returnTo = searchParams.get('returnTo') ?? '/feed';
-      window.location.href = decodeURIComponent(returnTo);
+      // Session is now in localStorage. router.push keeps the SPA alive
+      // so localStorage is intact on the next page.
+      const returnTo = decodeURIComponent(searchParams.get('returnTo') ?? '/feed');
+      router.push(returnTo);
+      router.refresh();
+      // Keep button showing "Signing in..." while navigating
     } catch (err) {
       failCount.current += 1;
       const wait = COOLDOWNS[Math.min(failCount.current - 1, COOLDOWNS.length - 1)];
       setCooldown(wait);
       setError(err instanceof Error ? err.message : 'Login failed');
-    } finally {
-      if (!navigating) setLoading(false);
+      setLoading(false);
     }
   };
 

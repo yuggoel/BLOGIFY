@@ -46,47 +46,39 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    // When the access token is expired but the refresh token is valid,
-    // INITIAL_SESSION fires with null, then SIGNED_IN fires a moment later
-    // with the refreshed session. If we set loading=false on INITIAL_SESSION:null
-    // RequireAuth immediately redirects before SIGNED_IN arrives.
-    //
-    // Strategy:
-    //  - INITIAL_SESSION with a session  → set user, set loading=false ✓
-    //  - INITIAL_SESSION with null       → don't touch loading; wait for
-    //                                      SIGNED_IN (refresh) or SIGNED_OUT
-    //  - SIGNED_IN / TOKEN_REFRESHED     → set user, set loading=false ✓
-    //  - SIGNED_OUT                      → clear user, set loading=false ✓
-    //
-    // Fallback: if neither event arrives within 3 s, unblock the UI.
-    const fallback = setTimeout(() => {
-      console.log('[UserContext] fallback timeout reached, setting loading=false');
+    // ── Step A: Immediate check ──────────────────────────────────────────
+    // Read the stored session from localStorage right away.
+    // This synchronously resolves (no network) and sets loading=false
+    // so the UI knows the auth state before anything renders.
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const profile = await loadProfile(session.user.id, session.user.email);
+        setUser(profile);
+      }
+      // Always mark loading done after Step A — even if no session.
       setLoading(false);
-    }, 3000);
+    });
 
+    // ── Step B: Listener for runtime changes ─────────────────────────────
+    // INITIAL_SESSION is intentionally ignored here: Step A (getSession)
+    // already handled the startup state. Responding to INITIAL_SESSION
+    // a second time causes a null-flash → redirect loop.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('[UserContext] onAuthStateChange event:', event, 'user:', session?.user?.email ?? 'null');
+        if (event === 'INITIAL_SESSION') return; // handled by getSession above
 
-        if (session?.user) {
-          const profile = await loadProfile(session.user.id, session.user.email);
-          console.log('[UserContext] profile loaded:', profile?.email ?? 'null');
-          setUser(profile);
-          clearTimeout(fallback);
-          setLoading(false);
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          if (session?.user) {
+            const profile = await loadProfile(session.user.id, session.user.email);
+            setUser(profile);
+          }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
-          clearTimeout(fallback);
-          setLoading(false);
         }
-        // INITIAL_SESSION with null → do nothing; let SIGNED_IN follow
       }
     );
 
-    return () => {
-      clearTimeout(fallback);
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = (userData: User) => setUser(userData);

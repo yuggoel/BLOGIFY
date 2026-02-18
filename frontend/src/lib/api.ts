@@ -128,6 +128,9 @@ export async function createPost(data: PostCreate): Promise<Post> {
 }
 
 export async function updatePost(id: string, data: PostUpdate): Promise<Post> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) throw new Error('You must be logged in to update a post');
+
   const { data: row, error } = await supabase
     .from('posts')
     .update({ ...data, updated_at: new Date().toISOString() })
@@ -139,6 +142,9 @@ export async function updatePost(id: string, data: PostUpdate): Promise<Post> {
 }
 
 export async function deletePost(id: string): Promise<void> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) throw new Error('You must be logged in to delete a post');
+
   const { error } = await supabase.from('posts').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }
@@ -208,6 +214,9 @@ export async function getUser(id: string): Promise<User> {
 }
 
 export async function updateUser(id: string, data: UserUpdate): Promise<User> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) throw new Error('You must be logged in to update your profile');
+
   const update: Record<string, any> = { updated_at: new Date().toISOString() };
   if (data.name !== undefined) update.name = data.name;
   if (data.email !== undefined) update.email = data.email;
@@ -224,6 +233,9 @@ export async function updateUser(id: string, data: UserUpdate): Promise<User> {
 }
 
 export async function deleteUser(id: string): Promise<void> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) throw new Error('You must be logged in to delete your account');
+
   const { error } = await supabase.from('users').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }

@@ -18,11 +18,8 @@ export default function RequireAuth({ children }: RequireAuthProps) {
   const { user, loading } = useUser();
   const router = useRouter();
 
-  console.log('[RequireAuth] loading:', loading, 'user:', user?.email ?? 'null');
-
   useEffect(() => {
     if (!loading && !user) {
-      console.log('[RequireAuth] no user after load — redirecting to login');
       const returnTo = encodeURIComponent(window.location.pathname);
       router.replace(`/login?returnTo=${returnTo}`);
     }

@@ -1,12 +1,16 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signup } from '@/lib/api';
+import { useUser } from '@/context/UserContext';
 
 const COOLDOWNS = [10, 20, 40, 80, 160, 300];
 
 export default function SignupPage() {
+  const router = useRouter();
+  const { user, loading: authLoading } = useUser();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,6 +20,13 @@ export default function SignupPage() {
   const [cooldown, setCooldown] = useState(0);
   const failCount = useRef(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Redirect already-logged-in users away from /signup
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace('/feed');
+    }
+  }, [authLoading, user, router]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
