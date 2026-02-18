@@ -100,15 +100,15 @@ export default async function PostPage({ params }: PostPageProps) {
         )}
 
         {/* Content */}
-        <div className="prose prose-lg prose-slate max-w-none
-          prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-900
+        <div className="prose prose-lg prose-slate dark:prose-invert max-w-none
+          prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-900 dark:prose-headings:text-white
           prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6
-          prose-p:text-[18px] prose-p:leading-[1.8] prose-p:text-slate-800 prose-p:mb-6
-          prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline
+          prose-p:text-[18px] prose-p:leading-[1.8] prose-p:text-slate-800 dark:prose-p:text-slate-200 prose-p:mb-6
+          prose-a:text-indigo-600 dark:prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:underline
           prose-img:rounded-lg prose-img:shadow-md prose-img:my-8 prose-img:w-full
-          prose-code:text-indigo-600 prose-code:bg-indigo-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
+          prose-code:text-indigo-600 dark:prose-code:text-indigo-300 prose-code:bg-indigo-50 dark:prose-code:bg-slate-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
           prose-pre:bg-slate-900 prose-pre:text-slate-50
-          prose-strong:text-slate-900 prose-li:text-slate-800
+          prose-strong:text-slate-900 dark:prose-strong:text-white prose-li:text-slate-800 dark:prose-li:text-slate-200
         ">
           <ReactMarkdown
             remarkPlugins={[remarkMath, remarkUnwrapImages]}

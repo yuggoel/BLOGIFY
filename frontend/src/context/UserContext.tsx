@@ -18,27 +18,38 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  async function loadProfile(userId: string): Promise<User | null> {
+  async function loadProfile(userId: string, fallbackEmail?: string): Promise<User | null> {
     const { data } = await supabase
       .from('users')
       .select('*')
       .eq('id', userId)
-      .single();
-    if (!data) return null;
-    return {
-      id: data.id,
-      name: data.name,
-      email: data.email,
-      profile_picture_url: data.profile_picture ?? undefined,
-      created_at: data.created_at,
-    };
+      .maybeSingle();
+    if (data) {
+      return {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        profile_picture_url: data.profile_picture ?? undefined,
+        created_at: data.created_at,
+      };
+    }
+    // Profile row not found yet (trigger may not have fired) — build from auth session
+    if (fallbackEmail) {
+      return {
+        id: userId,
+        name: fallbackEmail.split('@')[0],
+        email: fallbackEmail,
+        created_at: new Date().toISOString(),
+      };
+    }
+    return null;
   }
 
   useEffect(() => {
     // Restore session on mount
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        const profile = await loadProfile(session.user.id);
+        const profile = await loadProfile(session.user.id, session.user.email);
         setUser(profile);
       }
       setLoading(false);
@@ -47,8 +58,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // Listen for future auth events (sign in / sign out)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          const profile = await loadProfile(session.user.id);
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+          const profile = await loadProfile(session.user.id, session.user.email);
           setUser(profile);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);

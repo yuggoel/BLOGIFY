@@ -108,6 +108,10 @@ export async function getPost(id: string): Promise<Post> {
 }
 
 export async function createPost(data: PostCreate): Promise<Post> {
+  // Ensure we have an active session before attempting insert (RLS requires auth.uid())
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) throw new Error('You must be logged in to create a post');
+
   const { data: row, error } = await supabase
     .from('posts')
     .insert({
@@ -148,10 +152,14 @@ export async function getPostCount(): Promise<number> {
 }
 
 export async function uploadImage(file: File): Promise<string> {
+  // Ensure session is active (storage RLS requires auth.uid())
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) throw new Error('You must be logged in to upload images');
+
   const ext = file.name.split('.').pop();
   const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const { error } = await supabase.storage.from('images').upload(path, file);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(`Image upload failed: ${error.message}`);
   const { data } = supabase.storage.from('images').getPublicUrl(path);
   return data.publicUrl;
 }
@@ -190,7 +198,7 @@ export async function login(data: UserLogin): Promise<LoginResponse> {
     .from('users')
     .select('id, name, email')
     .eq('id', authData.user.id)
-    .single();
+    .maybeSingle();
 
   return {
     id: authData.user.id,
@@ -204,8 +212,8 @@ export async function getUser(id: string): Promise<User> {
     .from('users')
     .select('*')
     .eq('id', id)
-    .single();
-  if (error) throw new Error('User not found');
+    .maybeSingle();
+  if (error || !data) throw new Error('User not found');
   return mapUser(data);
 }
 

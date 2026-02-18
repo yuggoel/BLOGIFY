@@ -9,7 +9,7 @@ import { useUser } from '@/context/UserContext';
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login } = useUser();
+  useUser(); // keep context alive
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -29,14 +29,8 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await apiLogin({ email, password });
-      const user = {
-        id: response.id,
-        name: response.name,
-        email: response.email,
-        created_at: new Date().toISOString(), // or fetch from backend if available
-      };
-      login(user);
+      await apiLogin({ email, password });
+      // onAuthStateChange in UserContext will set the user automatically.
       router.push('/feed');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
