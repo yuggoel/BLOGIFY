@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { login as apiLogin } from '@/lib/api';
 import { useUser } from '@/context/UserContext';
@@ -10,7 +10,6 @@ import { useUser } from '@/context/UserContext';
 const COOLDOWNS = [10, 20, 40, 80, 160, 300];
 
 export default function LoginPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   useUser(); // keep context alive
   const [email, setEmail] = useState('');
@@ -47,19 +46,20 @@ export default function LoginPage() {
     setSuccess('');
     setLoading(true);
 
+    let navigating = false;
     try {
       await apiLogin({ email, password });
       failCount.current = 0;
-      // Redirect to intended page (from middleware returnTo param) or feed
+      navigating = true;
       const returnTo = searchParams.get('returnTo') ?? '/feed';
-      router.push(decodeURIComponent(returnTo));
+      window.location.href = decodeURIComponent(returnTo);
     } catch (err) {
       failCount.current += 1;
       const wait = COOLDOWNS[Math.min(failCount.current - 1, COOLDOWNS.length - 1)];
       setCooldown(wait);
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
-      setLoading(false);
+      if (!navigating) setLoading(false);
     }
   };
 

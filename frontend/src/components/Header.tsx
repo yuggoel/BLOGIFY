@@ -2,18 +2,15 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { getImageUrl } from '@/lib/api';
 import { useUser } from '@/context/UserContext';
 
 export default function Header() {
   const { user, logout } = useUser();
-  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
-    logout();
-    router.push('/');
+    logout(); // logout() calls window.location.href = '/' internally
     setMobileMenuOpen(false);
   };
 

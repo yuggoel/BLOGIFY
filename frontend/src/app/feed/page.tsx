@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getPosts, getPostCount, getUser, type Post, type User } from "@/lib/api";
-import { PostCard, Sidebar, Pagination, PostCardSkeleton } from "@/components";
+import { PostCard, Sidebar, Pagination, PostCardSkeleton, RequireAuth } from "@/components";
 import { useUser } from "@/context/UserContext";
 
 const POSTS_PER_PAGE = 6;
 
-export default function FeedPage() {
+function FeedContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useUser();
@@ -74,14 +74,10 @@ export default function FeedPage() {
   if (error) {
     const handleRetry = () => {
       setError('');
-      setLoading(true);
-      // trigger fetch by updating page param: call effect by setting same page
-      const evt = new Event('retryFeed');
-      window.dispatchEvent(evt);
-      setTimeout(() => setLoading(false), 500);
+      // Re-trigger useEffect by incrementing a counter would be ideal but
+      // a simple reload is reliable and keeps the code simple.
+      window.location.reload();
     };
-
-    const cached = typeof window !== 'undefined' ? localStorage.getItem('posts_cache') : null;
 
     return (
       <div className="container mx-auto px-4 py-8">
@@ -89,21 +85,9 @@ export default function FeedPage() {
           <div className="font-semibold">{error}</div>
           <div className="text-sm mt-1">Please check your network or try again.</div>
         </div>
-        <div className="flex gap-3">
-          <button onClick={handleRetry} className="px-4 py-2 bg-indigo-600 text-white rounded">Retry</button>
-          <a href="/login" className="px-4 py-2 border rounded">Login</a>
-          <a href="/signup" className="px-4 py-2 border rounded">Sign Up</a>
-        </div>
-        {cached && (
-          <div className="mt-6">
-            <h3 className="font-semibold mb-2">Cached posts (offline)</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {JSON.parse(cached).slice(0, 4).map((p: Post) => (
-                <PostCard key={p.id} post={p} authorName={p.user_id} />
-              ))}
-            </div>
-          </div>
-        )}
+        <button onClick={handleRetry} className="px-4 py-2 bg-indigo-600 text-white rounded">
+          Retry
+        </button>
       </div>
     );
   }
@@ -215,4 +199,8 @@ export default function FeedPage() {
       </div>
     </div>
   );
+}
+
+export default function FeedPage() {
+  return <RequireAuth><FeedContent /></RequireAuth>;
 }

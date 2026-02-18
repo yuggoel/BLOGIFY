@@ -180,26 +180,21 @@ export async function signup(data: UserCreate): Promise<User> {
 }
 
 export async function login(data: UserLogin): Promise<LoginResponse> {
-  const res = await fetch('/api/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+  // Call Supabase directly so createBrowserClient writes the session cookie
+  // automatically — without this, middleware can't read the session and
+  // redirects back to /login after navigation.
+  const { data: authData, error } = await supabase.auth.signInWithPassword({
+    email: data.email,
+    password: data.password,
   });
-  const json = await res.json();
-  if (!res.ok) {
-    if (res.status === 429) throw new Error('Too many login attempts. Please wait a minute.');
-    throw new Error(json.error ?? 'Login failed');
+  if (error || !authData.user) {
+    throw new Error('Invalid email or password');
   }
-
-  // Restore the Supabase session client-side so onAuthStateChange fires
-  if (json.access_token && json.refresh_token) {
-    await supabase.auth.setSession({
-      access_token: json.access_token,
-      refresh_token: json.refresh_token,
-    });
-  }
-
-  return { id: json.id, name: json.name, email: json.email };
+  return {
+    id: authData.user.id,
+    name: authData.user.user_metadata?.name ?? '',
+    email: authData.user.email ?? data.email,
+  };
 }
 
 export async function getUser(id: string): Promise<User> {

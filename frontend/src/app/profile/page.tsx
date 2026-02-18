@@ -11,6 +11,9 @@ function ProfileContent() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
 
+  // RequireAuth guarantees user is non-null here, but we add a guard for TS
+  if (!user) return null;
+
   // Fetch this user's posts
   useEffect(() => {
     if (!user) return;

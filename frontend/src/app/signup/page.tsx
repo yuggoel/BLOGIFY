@@ -1,14 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signup } from '@/lib/api';
 
 const COOLDOWNS = [10, 20, 40, 80, 160, 300];
 
 export default function SignupPage() {
-  const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,7 +48,8 @@ export default function SignupPage() {
     try {
       await signup({ name, email, password });
       failCount.current = 0;
-      router.push('/login?registered=true');
+      window.location.href = '/login?registered=true';
+      return;
     } catch (err) {
       failCount.current += 1;
       const wait = COOLDOWNS[Math.min(failCount.current - 1, COOLDOWNS.length - 1)];

@@ -46,28 +46,47 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    // Restore session on mount
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const profile = await loadProfile(session.user.id, session.user.email);
-        setUser(profile);
-      }
+    // When the access token is expired but the refresh token is valid,
+    // INITIAL_SESSION fires with null, then SIGNED_IN fires a moment later
+    // with the refreshed session. If we set loading=false on INITIAL_SESSION:null
+    // RequireAuth immediately redirects before SIGNED_IN arrives.
+    //
+    // Strategy:
+    //  - INITIAL_SESSION with a session  → set user, set loading=false ✓
+    //  - INITIAL_SESSION with null       → don't touch loading; wait for
+    //                                      SIGNED_IN (refresh) or SIGNED_OUT
+    //  - SIGNED_IN / TOKEN_REFRESHED     → set user, set loading=false ✓
+    //  - SIGNED_OUT                      → clear user, set loading=false ✓
+    //
+    // Fallback: if neither event arrives within 3 s, unblock the UI.
+    const fallback = setTimeout(() => {
+      console.log('[UserContext] fallback timeout reached, setting loading=false');
       setLoading(false);
-    });
+    }, 3000);
 
-    // Listen for future auth events (sign in / sign out)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+        console.log('[UserContext] onAuthStateChange event:', event, 'user:', session?.user?.email ?? 'null');
+
+        if (session?.user) {
           const profile = await loadProfile(session.user.id, session.user.email);
+          console.log('[UserContext] profile loaded:', profile?.email ?? 'null');
           setUser(profile);
+          clearTimeout(fallback);
+          setLoading(false);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
+          clearTimeout(fallback);
+          setLoading(false);
         }
+        // INITIAL_SESSION with null → do nothing; let SIGNED_IN follow
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(fallback);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = (userData: User) => setUser(userData);

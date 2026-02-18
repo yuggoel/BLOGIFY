@@ -1,19 +1,39 @@
 /* eslint-disable @next/next/no-img-element */
 import { getPost, getUser, formatDate, calculateReadTime, getImageUrl, type Post, type User } from '@/lib/api';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { DeletePostButton, EditPostButton } from '@/components';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import remarkUnwrapImages from 'remark-unwrap-images';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 interface PostPageProps {
   params: Promise<{ id: string }>;
 }
 
 export default async function PostPage({ params }: PostPageProps) {
+  // Auth guard — redirect to login if no session
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => cookieStore.getAll(),
+        setAll: () => {},
+      },
+    }
+  );
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    const { id } = await params;
+    redirect(`/login?returnTo=/posts/${id}`);
+  }
+
   const { id } = await params;
   
   let post: Post;
