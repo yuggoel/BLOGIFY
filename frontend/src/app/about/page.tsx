@@ -44,18 +44,18 @@ export default function AboutPage() {
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Tech Stack</h2>
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Backend</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Database & Auth</h3>
                 <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                  <li>• Python FastAPI</li>
-                  <li>• MongoDB + Motor</li>
-                  <li>• Pydantic</li>
-                  <li>• Uvicorn</li>
+                  <li>• Supabase (PostgreSQL)</li>
+                  <li>• Supabase Auth</li>
+                  <li>• Row Level Security</li>
+                  <li>• Supabase Storage</li>
                 </ul>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Frontend</h3>
                 <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                  <li>• Next.js 14</li>
+                  <li>• Next.js 16 (App Router)</li>
                   <li>• React 19</li>
                   <li>• Tailwind CSS</li>
                   <li>• TypeScript</li>
