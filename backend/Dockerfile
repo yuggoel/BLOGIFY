@@ -11,9 +11,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY APP ./APP
+# Copy full project into the image
+COPY . .
 
+# Default PORT fallback
 ENV PORT=8000
 
 EXPOSE 8000
@@ -23,16 +24,4 @@ COPY start.sh ./start.sh
 RUN chmod +x ./start.sh
 
 # Run the start script which expands $PORT and execs uvicorn
-CMD ["sh", "./start.sh"]
-FROM python:3.11-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-EXPOSE 8080
-
-CMD ["sh", "-c", "uvicorn APP.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+CMD ["sh", "-c", "./start.sh"]
