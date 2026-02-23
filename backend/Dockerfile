@@ -18,7 +18,8 @@ ENV PORT=8000
 
 EXPOSE 8000
 
-CMD ["uvicorn", "APP.main:app", "--host", "0.0.0.0", "--port", "${PORT}"]
+# Use shell form so $PORT is expanded at runtime by the shell
+CMD ["sh", "-c", "uvicorn APP.main:app --host 0.0.0.0 --port $PORT"]
 FROM python:3.11-slim
 
 WORKDIR /app
