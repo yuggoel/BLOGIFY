@@ -15,10 +15,12 @@ app = FastAPI(
 # ── CORS ───────────────────────────────────────────────────────────────────────
 # allow_origins is driven by FRONTEND_URL env var (set on Railway).
 # Locally it defaults to http://localhost:3000.
+# allow_origin_regex also covers Vercel preview deployment URLs.
 _origins = list({"http://localhost:3000", settings.frontend_url})
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
