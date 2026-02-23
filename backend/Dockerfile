@@ -23,5 +23,9 @@ EXPOSE 8000
 COPY start.sh ./start.sh
 RUN chmod +x ./start.sh
 
-# Run the start script which expands $PORT and execs uvicorn
-CMD ["sh", "-c", "./start.sh"]
+# Use a shell entrypoint so platform-provided commands are executed with shell
+# (this allows $PORT to be expanded if the platform overrides the command)
+ENTRYPOINT ["sh", "-c"]
+
+# Default command: run our start script which expands $PORT and execs uvicorn
+CMD ["./start.sh"]
