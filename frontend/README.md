@@ -1,6 +1,6 @@
 ﻿# Blogify
 
-A full-stack blogging platform built with **Next.js 16** and **Supabase**.
+A full-stack blogging platform built with **Next.js 16** and **FastAPI + MongoDB**.
 
 ---
 
@@ -10,10 +10,10 @@ A full-stack blogging platform built with **Next.js 16** and **Supabase**.
 |---|---|
 | Framework | Next.js 16 (App Router) |
 | UI | React 19, Tailwind CSS 4, TypeScript |
-| Database | Supabase (PostgreSQL) |
-| Auth | Supabase Auth (email/password) |
-| Storage | Supabase Storage (images) |
-| Security | Row Level Security (RLS) policies |
+| Backend API | Python FastAPI + Uvicorn |
+| Database | MongoDB (PyMongo) |
+| Auth | FastAPI JWT (PyJWT + bcrypt) |
+| Storage | MongoDB GridFS (images) |
 | Markdown | react-markdown, remark-math, rehype-katex |
 
 ---
@@ -47,29 +47,29 @@ src/
   components/           # Shared UI components
   context/              # UserContext (global auth state)
   lib/
-    api.ts              # All Supabase data functions
-    supabase.ts         # Supabase client instance
+    api.ts              # All API calls to FastAPI backend
 ```
 
 ---
 
 ## Auth Architecture
 
-Session is stored in **localStorage** via the standard Supabase JS client (`createClient`).
+Session is stored in **localStorage** as a JWT token (`blogify_token`) issued by the FastAPI backend.
 
 **UserContext** (`src/context/UserContext.tsx`):
-1. On mount — calls `getSession()` to read localStorage immediately (synchronous, no network)
-2. Sets `user` + `loading = false`
-3. Listens to `onAuthStateChange` for `SIGNED_IN`, `TOKEN_REFRESHED`, `SIGNED_OUT` (ignores `INITIAL_SESSION` to avoid double-fire)
+1. On mount — calls `getTokenPayload()` to decode the JWT from localStorage (synchronous, no network)
+2. Fetches full profile from `GET /users/{id}`
+3. Sets `user` + `loading = false`
 
 **RequireAuth** (`src/components/RequireAuth.tsx`):
 - Three-state guard: `loading` → spinner, `user = null` → redirect to `/login`, `user` → render children
 - Wraps all protected pages client-side
 
 **Login flow:**
-1. `supabase.auth.signInWithPassword()` writes session to localStorage
-2. `onAuthStateChange(SIGNED_IN)` fires → `UserContext` updates `user`
-3. `router.push(returnTo)` navigates within the SPA — localStorage stays intact
+1. `POST /auth/login` returns a JWT token
+2. `setToken(token)` writes it to localStorage
+3. `UserContext` decodes the token and fetches the user profile
+4. `router.push(returnTo)` navigates within the SPA — token stays intact
 
 ---
 
@@ -78,8 +78,7 @@ Session is stored in **localStorage** via the standard Supabase JS client (`crea
 Create `frontend/.env.local`:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 ```
 
 ---

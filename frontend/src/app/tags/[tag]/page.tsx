@@ -26,11 +26,8 @@ export default function TagPage({ params }: TagPageProps) {
     const fetchPostsByTag = async () => {
       setLoading(true);
       try {
-        // Fetch all posts and filter by tag on client side
-        const allPosts: Post[] = await getPosts(0, 1000);
-        const filteredPosts = allPosts.filter((post) =>
-          post.tags.some((t) => t.toLowerCase() === decodedTag.toLowerCase())
-        );
+        // Fetch posts filtered by tag server-side
+        const filteredPosts: Post[] = await getPosts(0, 1000, undefined, decodedTag);
         
         setPosts(filteredPosts);
 

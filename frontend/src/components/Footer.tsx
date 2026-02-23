@@ -50,7 +50,7 @@ export default function Footer() {
 
         {/* Bottom */}
         <div className="border-t border-white/20 mt-8 pt-8 text-center text-slate-300">
-          <p>Blogify &copy; {new Date().getFullYear()} | Built with Next.js &amp; Supabase</p>
+          <p>Blogify &copy; {new Date().getFullYear()} | Built with Next.js &amp; MongoDB</p>
         </div>
       </div>
     </footer>

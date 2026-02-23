@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { login as apiLogin } from '@/lib/api';
 import { useUser } from '@/context/UserContext';
 
 // Exponential back-off cooldowns in seconds
@@ -13,7 +13,7 @@ const COOLDOWNS = [10, 20, 40, 80, 160, 300];
 export default function LoginPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user, loading: authLoading } = useUser();
+  const { user, loading: authLoading, login } = useUser();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -56,21 +56,11 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Call Supabase directly — this fires onAuthStateChange(SIGNED_IN)
-      // which updates UserContext. We then navigate after confirming success.
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (authError) throw new Error('Invalid email or password');
-
+      const user = await apiLogin({ email, password });
+      login(user); // update UserContext immediately
       failCount.current = 0;
-      // Session is now in localStorage. router.push keeps the SPA alive
-      // so localStorage is intact on the next page.
       const returnTo = decodeURIComponent(searchParams.get('returnTo') ?? '/feed');
       router.push(returnTo);
-      router.refresh();
       // Keep button showing "Signing in..." while navigating
     } catch (err) {
       failCount.current += 1;

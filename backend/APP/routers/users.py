@@ -1,38 +1,44 @@
 from datetime import datetime, timezone
 
+from bson import ObjectId
+from bson.errors import InvalidId
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..auth import get_current_user_id
-from ..database import supabase
+from ..database import users_col
 from ..models import UserResponse, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-def _map_user(row: dict) -> UserResponse:
+def _parse_uid(user_id: str) -> ObjectId:
+    try:
+        return ObjectId(user_id)
+    except (InvalidId, Exception):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+
+def _map_user(doc: dict) -> UserResponse:
     return UserResponse(
-        id=row["id"],
-        name=row["name"],
-        email=row["email"],
-        profile_picture_url=row.get("profile_picture"),
-        created_at=row["created_at"],
+        id=str(doc["_id"]),
+        name=doc["name"],
+        email=doc["email"],
+        profile_picture_url=doc.get("profile_picture"),
+        created_at=doc["created_at"],
     )
 
 
 @router.get("/count")
 def get_user_count():
-    result = supabase.table("users").select("*", count="exact", head=True).execute()
-    return {"count": result.count or 0}
+    return {"count": users_col.count_documents({})}
 
 
 @router.get("/{user_id}", response_model=UserResponse)
 def get_user(user_id: str):
-    result = (
-        supabase.table("users").select("*").eq("id", user_id).maybe_single().execute()
-    )
-    if not result.data:
+    doc = users_col.find_one({"_id": _parse_uid(user_id)})
+    if not doc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    return _map_user(result.data)
+    return _map_user(doc)
 
 
 @router.put("/{user_id}", response_model=UserResponse)
@@ -47,23 +53,20 @@ def update_user(
             detail="You can only update your own profile",
         )
 
-    update_data: dict = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    update_fields: dict = {"updated_at": datetime.now(timezone.utc).isoformat()}
     if body.name is not None:
-        update_data["name"] = body.name
+        update_fields["name"] = body.name
     if body.email is not None:
-        update_data["email"] = body.email
+        update_fields["email"] = body.email
     if body.profile_picture_url is not None:
-        update_data["profile_picture"] = body.profile_picture_url
+        update_fields["profile_picture"] = body.profile_picture_url
 
-    result = (
-        supabase.table("users")
-        .update(update_data)
-        .eq("id", user_id)
-        .select()
-        .single()
-        .execute()
-    )
-    return _map_user(result.data)
+    result = users_col.update_one({"_id": _parse_uid(user_id)}, {"$set": update_fields})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    updated = users_col.find_one({"_id": _parse_uid(user_id)})
+    return _map_user(updated)
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -76,4 +79,4 @@ def delete_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only delete your own account",
         )
-    supabase.table("users").delete().eq("id", user_id).execute()
+    users_col.delete_one({"_id": _parse_uid(user_id)})

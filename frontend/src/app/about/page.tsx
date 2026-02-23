@@ -46,10 +46,10 @@ export default function AboutPage() {
               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Database & Auth</h3>
                 <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                  <li>• Supabase (PostgreSQL)</li>
-                  <li>• Supabase Auth</li>
-                  <li>• Row Level Security</li>
-                  <li>• Supabase Storage</li>
+                  <li>• MongoDB (PyMongo)</li>
+                  <li>• FastAPI JWT Auth (PyJWT)</li>
+                  <li>• GridFS Image Storage</li>
+                  <li>• Bcrypt Password Hashing</li>
                 </ul>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">

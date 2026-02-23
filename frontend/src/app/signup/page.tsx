@@ -59,7 +59,8 @@ export default function SignupPage() {
     try {
       await signup({ name, email, password });
       failCount.current = 0;
-      window.location.href = '/login?registered=true';
+      // Signup stores the token automatically, so go straight to the feed.
+      window.location.href = '/feed';
       return;
     } catch (err) {
       failCount.current += 1;

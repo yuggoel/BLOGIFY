@@ -26,23 +26,21 @@ Blogify is a modern blogging platform where anyone can share their thoughts, ide
 ```
 Browser (Next.js)
       |
-      +-- Auth + Storage  -->  Supabase (directly)
-      |
-      +-- Data (posts/users)  -->  FastAPI  -->  Supabase PostgreSQL
+      +-- Auth + Data + Storage  -->  FastAPI  -->  MongoDB
 ```
 
-- **Supabase Auth** handles login, signup, and session management — called directly from the frontend.
-- **Supabase Storage** handles image/avatar uploads — called directly from the frontend.
-- **FastAPI** sits in front of all data reads/writes, verifying the Supabase JWT on every request.
+- **FastAPI** handles all auth (signup/login with bcrypt + JWT), data reads/writes, and image uploads.
+- **MongoDB** stores all posts, user profiles, and uploaded images (via GridFS).
+- **PyJWT** signs and verifies JWTs — no third-party auth provider required.
 - **Next.js** is the frontend — all pages, UI, and routing.
 
 ---
 
 ## Features
 
-- User signup and login (email/password via Supabase Auth)
+- User signup and login (email/password with bcrypt + JWT)
 - Create, edit, and delete blog posts with Markdown + math (KaTeX) support
-- Image uploads per post and avatar uploads for profiles (Supabase Storage)
+- Image uploads per post and avatar uploads for profiles (MongoDB GridFS)
 - Community feed with featured post highlight and pagination
 - Tag-based post filtering
 - Personal profile page with editable name and avatar
@@ -59,10 +57,9 @@ Browser (Next.js)
 | Framework | Next.js 16 (App Router) |
 | UI | React 19, Tailwind CSS, TypeScript |
 | Backend API | Python FastAPI + Uvicorn |
-| Database | Supabase (PostgreSQL) |
-| Auth | Supabase Auth (email/password) |
-| Storage | Supabase Storage (images) |
-| JWT Verification | PyJWT |
+| Database | MongoDB (PyMongo) |
+| Auth | FastAPI JWT (PyJWT + bcrypt) |
+| Storage | MongoDB GridFS (images) |
 | Markdown | react-markdown, remark-math, rehype-katex |
 | Frontend Hosting | Vercel |
 | Backend Hosting | Railway |
@@ -76,8 +73,8 @@ backend/
   APP/
     main.py          # FastAPI entry point + CORS
     config.py        # Loads backend/.env settings
-    database.py      # Supabase client (service role key)
-    auth.py          # Verifies Supabase JWT on protected routes
+    database.py      # PyMongo client + GridFS setup
+    auth.py          # Issues and verifies JWT on protected routes
     models.py        # Pydantic request/response schemas
     routers/
       posts.py       # GET/POST/PUT/DELETE /posts
@@ -103,8 +100,7 @@ frontend/
     context/
       UserContext.tsx   # Global auth state
     lib/
-      api.ts         # Data calls (fetch to FastAPI) + auth/storage (Supabase direct)
-      supabase.ts    # Supabase browser client
+      api.ts         # All data + auth + image upload calls (FastAPI)
   .env.local         # Your frontend secrets (never commit this)
 ```
 
@@ -116,7 +112,7 @@ frontend/
 
 - Node.js 18+
 - Python 3.10+
-- A [Supabase](https://supabase.com) project (free tier works)
+- A running MongoDB instance (local or [MongoDB Atlas](https://www.mongodb.com/atlas) free tier)
 
 ---
 
@@ -139,12 +135,15 @@ pip install -r backend/requirements.txt
 copy backend\.env.example backend\.env
 ```
 
-Fill in the three values — all found in Supabase Dashboard -> Settings -> API:
+Fill in your MongoDB URI and JWT secret:
 
 ```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_KEY=your-service-role-key
-SUPABASE_JWT_SECRET=your-jwt-secret
+# Local MongoDB:  mongodb://localhost:27017/blogify
+# MongoDB Atlas:  mongodb+srv://<user>:<pass>@<cluster>.mongodb.net/blogify
+MONGODB_URI=mongodb://localhost:27017/blogify
+
+# Any long random string — used to sign JWTs issued by this API
+JWT_SECRET=your-long-random-secret
 ```
 
 **4. Run the backend**
@@ -167,8 +166,6 @@ npm install
 
 **2. Create `frontend/.env.local`**
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 ```
 
@@ -188,7 +185,7 @@ App: http://localhost:3000
 1. Connect your GitHub repo to [Railway](https://railway.app).
 2. Set the root directory to `backend/`.
 3. Set start command: `uvicorn APP.main:app --host 0.0.0.0 --port $PORT`
-4. Add environment variables: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_JWT_SECRET`
+4. Add environment variables: `MONGODB_URI`, `JWT_SECRET`
 5. Deploy. Railway gives you a public URL.
 
 ### Frontend (Vercel)
@@ -196,20 +193,16 @@ App: http://localhost:3000
 1. Connect your GitHub repo to [Vercel](https://vercel.com).
 2. Set root directory to `frontend/`.
 3. Add environment variables:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `NEXT_PUBLIC_API_URL` — set to your Railway backend URL
 4. Deploy.
-
-> After rotating Supabase API keys: update the values in Railway and Vercel and redeploy both.
 
 ---
 
 ## .gitignore - Do Not Commit
 
 - `node_modules/`, `frontend/.next/` — dependencies and build output
-- `frontend/.env.local` — contains Supabase anon key
-- `backend/.env` — contains service role key and JWT secret
+- `frontend/.env.local` — contains API URL override
+- `backend/.env` — contains MongoDB URI and JWT secret
 - `__pycache__/`, `*.pyc` — Python cache files
 - `.DS_Store`, `Thumbs.db` — OS metadata
 

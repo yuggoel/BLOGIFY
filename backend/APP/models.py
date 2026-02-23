@@ -2,6 +2,26 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
+# ── Auth ───────────────────────────────────────────────────────────────────────
+
+class AuthSignup(BaseModel):
+    name: str
+    email: str
+    password: str
+
+
+class AuthLogin(BaseModel):
+    email: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    user_id: str
+    name: str
+    email: str
+
+
 # ── Posts ──────────────────────────────────────────────────────────────────────
 
 class PostCreate(BaseModel):
@@ -31,6 +51,11 @@ class PostResponse(BaseModel):
 
 
 # ── Users ──────────────────────────────────────────────────────────────────────
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
