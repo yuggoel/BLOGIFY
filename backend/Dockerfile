@@ -18,8 +18,12 @@ ENV PORT=8000
 
 EXPOSE 8000
 
-# Use shell form so $PORT is expanded at runtime by the shell
-CMD ["sh", "-c", "uvicorn APP.main:app --host 0.0.0.0 --port $PORT"]
+# Copy start script and make executable
+COPY start.sh ./start.sh
+RUN chmod +x ./start.sh
+
+# Run the start script which expands $PORT and execs uvicorn
+CMD ["sh", "./start.sh"]
 FROM python:3.11-slim
 
 WORKDIR /app
