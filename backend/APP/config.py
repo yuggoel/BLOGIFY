@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     app_host: str = "0.0.0.0"
     app_port: int = 8000
 
-    model_config = {"env_file": "backend/.env", "extra": "ignore"}
+    model_config = {"env_file": ".env", "extra": "ignore"}
 
 
 settings = Settings()
