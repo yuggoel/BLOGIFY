@@ -5,6 +5,8 @@ from .config import settings
 from .routers import posts, users
 from .routers.auth import router as auth_router
 from .routers.upload import router as upload_router
+from fastapi import Depends
+from .auth import get_current_user_id
 
 app = FastAPI(
     title="Blogify API",
@@ -34,5 +36,5 @@ app.include_router(users.router)
 
 
 @app.get("/")
-def root():
+def root(current_user_id: str = Depends(get_current_user_id)):
     return {"status": "ok", "message": "Blogify API is running"}

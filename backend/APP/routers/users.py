@@ -29,12 +29,12 @@ def _map_user(doc: dict) -> UserResponse:
 
 
 @router.get("/count")
-def get_user_count():
+def get_user_count(current_user_id: str = Depends(get_current_user_id)):
     return {"count": users_col.count_documents({})}
 
 
 @router.get("/{user_id}", response_model=UserResponse)
-def get_user(user_id: str):
+def get_user(user_id: str, current_user_id: str = Depends(get_current_user_id)):
     doc = users_col.find_one({"_id": _parse_uid(user_id)})
     if not doc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")

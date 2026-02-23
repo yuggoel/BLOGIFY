@@ -38,7 +38,7 @@ async def upload_file(
 
 
 @router.get("/images/{file_id}")
-def get_image(file_id: str):
+def get_image(file_id: str, current_user_id: str = Depends(get_current_user_id)):
     """Serve an image stored in MongoDB GridFS."""
     try:
         oid = ObjectId(file_id)

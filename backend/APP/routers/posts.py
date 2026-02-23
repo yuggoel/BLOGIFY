@@ -39,6 +39,7 @@ def get_posts(
     limit: int = Query(20, ge=1, le=1000),
     user_id: Optional[str] = Query(None),
     tag: Optional[str] = Query(None),
+    current_user_id: str = Depends(get_current_user_id),
 ):
     query: dict = {}
     if user_id:
@@ -57,12 +58,12 @@ def get_posts(
 
 
 @router.get("/count")
-def get_post_count():
+def get_post_count(current_user_id: str = Depends(get_current_user_id)):
     return {"count": posts_col.count_documents({})}
 
 
 @router.get("/{post_id}", response_model=PostResponse)
-def get_post(post_id: str):
+def get_post(post_id: str, current_user_id: str = Depends(get_current_user_id)):
     doc = posts_col.find_one({"_id": _parse_oid(post_id)})
     if not doc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
