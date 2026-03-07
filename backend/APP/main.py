@@ -36,5 +36,5 @@ app.include_router(users.router)
 
 
 @app.get("/")
-def root(current_user_id: str = Depends(get_current_user_id)):
+def root():
     return {"status": "ok", "message": "Blogify API is running"}

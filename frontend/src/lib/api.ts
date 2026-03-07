@@ -5,17 +5,20 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000';
 // ── Token storage ──────────────────────────────────────────────────────────────
 const TOKEN_KEY = 'blogify_token';
 
+// Token management helpers
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem(TOKEN_KEY);
 }
 
 export function setToken(token: string): void {
-  if (typeof window !== 'undefined') localStorage.setItem(TOKEN_KEY, token);
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(TOKEN_KEY, token);
 }
 
 export function clearToken(): void {
-  if (typeof window !== 'undefined') localStorage.removeItem(TOKEN_KEY);
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(TOKEN_KEY);
 }
 
 /**
@@ -218,7 +221,8 @@ export async function deletePost(id: string): Promise<void> {
 }
 
 export async function getPostCount(): Promise<number> {
-  const data = await apiFetch<{ count: number }>('/posts/count');
+  const headers = await authHeaders();
+  const data = await apiFetch<{ count: number }>('/posts/count', { headers });
   return data.count;
 }
 
@@ -243,7 +247,8 @@ export async function uploadImage(file: File): Promise<string> {
 
 // ── Users ──────────────────────────────────────────────────────────────────────
 export async function getUser(id: string): Promise<User> {
-  const row = await apiFetch<User>(`/users/${id}`);
+  const headers = await authHeaders();
+  const row = await apiFetch<User>(`/users/${id}`, { headers });
   return mapUser(row);
 }
 
@@ -268,7 +273,8 @@ export async function deleteUser(id: string): Promise<void> {
 }
 
 export async function getUserCount(): Promise<number> {
-  const data = await apiFetch<{ count: number }>('/users/count');
+  const headers = await authHeaders();
+  const data = await apiFetch<{ count: number }>('/users/count', { headers });
   return data.count;
 }
 

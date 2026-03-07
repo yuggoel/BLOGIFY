@@ -46,7 +46,8 @@ Browser (Next.js)
 - Personal profile page with editable name and avatar
 - View other users' public profiles
 - Responsive dark/light UI
-- All content is protected — login required to access anything
+- **Public endpoints:** View posts, user profiles, and counts without login
+- **Protected endpoints:** Creating, editing, deleting posts/users, and uploads require authentication
 
 ---
 
@@ -74,11 +75,13 @@ backend/
     main.py          # FastAPI entry point + CORS
     config.py        # Loads backend/.env settings
     database.py      # PyMongo client + GridFS setup
-    auth.py          # Issues and verifies JWT on protected routes
+    auth.py          # JWT creation/validation, authentication helpers
     models.py        # Pydantic request/response schemas
     routers/
-      posts.py       # GET/POST/PUT/DELETE /posts
-      users.py       # GET/PUT/DELETE /users/{id}
+      posts.py       # All /posts endpoints (public/protected)
+      users.py       # All /users endpoints (public/protected)
+      auth.py        # /auth/signup, /auth/login (public)
+      upload.py      # /upload, /images (protected)
   requirements.txt
   .env.example
   .env               # Your secrets (never commit this)
@@ -86,16 +89,16 @@ backend/
 frontend/
   src/
     app/             # Next.js App Router pages
-      feed/          # Main blog feed (requires login)
-      posts/[id]/    # Post detail view
-      posts/new/     # Create a post
-      posts/[id]/edit/   # Edit a post
-      login/         # Login page
-      signup/        # Signup page
-      profile/       # Your profile
-      users/[id]/    # Other users profiles
-      tags/[tag]/    # Posts filtered by tag
-      about/         # About page
+      feed/          # Main blog feed (protected)
+      posts/[id]/    # Post detail view (public)
+      posts/new/     # Create a post (protected)
+      posts/[id]/edit/   # Edit a post (protected)
+      login/         # Login page (public)
+      signup/        # Signup page (public)
+      profile/       # Your profile (protected)
+      users/[id]/    # Other users profiles (public)
+      tags/[tag]/    # Posts filtered by tag (public)
+      about/         # About page (public)
     components/      # Shared UI (Header, Footer, PostCard, etc.)
     context/
       UserContext.tsx   # Global auth state
@@ -103,6 +106,28 @@ frontend/
       api.ts         # All data + auth + image upload calls (FastAPI)
   .env.local         # Your frontend secrets (never commit this)
 ```
+
+---
+
+## API Endpoint Authentication Table
+
+| Endpoint                  | Method | Public | Description                                 |
+|---------------------------|--------|--------|---------------------------------------------|
+| `/auth/signup`            | POST   | Yes    | Register new user, returns JWT              |
+| `/auth/login`             | POST   | Yes    | Login, returns JWT                          |
+| `/users/{user_id}`        | GET    | Yes    | Get user profile                            |
+| `/users/count`            | GET    | Yes    | Get user count                              |
+| `/users/{user_id}`        | PUT    | No     | Update user (self only)                     |
+| `/users/{user_id}`        | DELETE | No     | Delete user (self only)                     |
+| `/posts`                  | GET    | Yes    | List posts                                  |
+| `/posts/{post_id}`        | GET    | Yes    | Get post by ID                              |
+| `/posts/count`            | GET    | No     | Get post count                              |
+| `/posts`                  | POST   | No     | Create post                                 |
+| `/posts/{post_id}`        | PUT    | No     | Update post (owner only)                    |
+| `/posts/{post_id}`        | DELETE | No     | Delete post (owner only)                    |
+| `/upload`                 | POST   | No     | Upload image                                |
+| `/images/{file_id}`       | GET    | No     | Get uploaded image                          |
+| `/`                       | GET    | Yes    | API root (health/status)                    |
 
 ---
 
@@ -148,7 +173,9 @@ JWT_SECRET=your-long-random-secret
 
 **4. Run the backend**
 ```bash
-uvicorn backend.APP.main:app --reload
+cd backend
+python -m pip install -r requirements.txt
+python -m uvicorn APP.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 - API: http://127.0.0.1:8000
@@ -171,6 +198,8 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 
 **3. Run the frontend**
 ```bash
+cd frontend
+npm install
 npm run dev
 ```
 
@@ -178,23 +207,17 @@ App: http://localhost:3000
 
 ---
 
-## Deployment
+## Auth Architecture (Frontend)
 
-### Backend (Railway)
+- JWT token is stored in `localStorage` as `blogify_token`.
+- All protected API calls include the Authorization header.
+- `UserContext` manages auth state; `RequireAuth` guards protected pages.
 
-1. Connect your GitHub repo to [Railway](https://railway.app).
-2. Set the root directory to `backend/`.
-3. Set start command: `uvicorn APP.main:app --host 0.0.0.0 --port $PORT`
-4. Add environment variables: `MONGODB_URI`, `JWT_SECRET`
-5. Deploy. Railway gives you a public URL.
-
-### Frontend (Vercel)
-
-1. Connect your GitHub repo to [Vercel](https://vercel.com).
-2. Set root directory to `frontend/`.
-3. Add environment variables:
-   - `NEXT_PUBLIC_API_URL` — set to your Railway backend URL
-4. Deploy.
+**Login flow:**
+1. `POST /auth/login` returns a JWT token
+2. `setToken(token)` writes it to localStorage
+3. `UserContext` decodes the token and fetches the user profile
+4. Navigation within the SPA keeps the token intact
 
 ---
 

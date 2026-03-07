@@ -13,4 +13,5 @@ case "$PORT" in
 		;;
 esac
 
-exec uvicorn APP.main:app --host 0.0.0.0 --port "$PORT"
+exec uvicorn APP.main:app --host 0.0.0.0 --port "localhost:8000"
+
