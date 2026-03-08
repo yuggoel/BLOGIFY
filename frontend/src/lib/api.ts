@@ -221,8 +221,7 @@ export async function deletePost(id: string): Promise<void> {
 }
 
 export async function getPostCount(): Promise<number> {
-  const headers = await authHeaders();
-  const data = await apiFetch<{ count: number }>('/posts/count', { headers });
+  const data = await apiFetch<{ count: number }>('/posts/count');
   return data.count;
 }
 
@@ -247,8 +246,7 @@ export async function uploadImage(file: File): Promise<string> {
 
 // ── Users ──────────────────────────────────────────────────────────────────────
 export async function getUser(id: string): Promise<User> {
-  const headers = await authHeaders();
-  const row = await apiFetch<User>(`/users/${id}`, { headers });
+  const row = await apiFetch<User>(`/users/${id}`);
   return mapUser(row);
 }
 
@@ -273,8 +271,7 @@ export async function deleteUser(id: string): Promise<void> {
 }
 
 export async function getUserCount(): Promise<number> {
-  const headers = await authHeaders();
-  const data = await apiFetch<{ count: number }>('/users/count', { headers });
+  const data = await apiFetch<{ count: number }>('/users/count');
   return data.count;
 }
 
