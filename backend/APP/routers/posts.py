@@ -57,7 +57,7 @@ def get_posts(
 
 
 @router.get("/count")
-def get_post_count(current_user_id: str = Depends(get_current_user_id)):
+def get_post_count():
     return {"count": posts_col.count_documents({})}
 
 
