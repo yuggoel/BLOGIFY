@@ -27,7 +27,8 @@ A full-stack blogging platform built with **Next.js 16** and **FastAPI + MongoDB
 - Tag-based filtering
 - User profiles with avatar upload
 - Fully responsive dark/light UI
-- Protected routes — all content requires login
+- Public routes (feed, post view, user profiles, tags) accessible without login
+- Protected routes (create/edit/delete posts, profile editing) require authentication
 
 ---
 

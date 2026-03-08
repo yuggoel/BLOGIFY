@@ -63,7 +63,7 @@ Browser (Next.js)
 | Storage | MongoDB GridFS (images) |
 | Markdown | react-markdown, remark-math, rehype-katex |
 | Frontend Hosting | Vercel |
-| Backend Hosting | Railway |
+| Backend Hosting | Render |
 
 ---
 
@@ -121,12 +121,12 @@ frontend/
 | `/users/{user_id}`        | DELETE | No     | Delete user (self only)                     |
 | `/posts`                  | GET    | Yes    | List posts                                  |
 | `/posts/{post_id}`        | GET    | Yes    | Get post by ID                              |
-| `/posts/count`            | GET    | No     | Get post count                              |
+| `/posts/count`            | GET    | Yes    | Get post count                              |
 | `/posts`                  | POST   | No     | Create post                                 |
 | `/posts/{post_id}`        | PUT    | No     | Update post (owner only)                    |
 | `/posts/{post_id}`        | DELETE | No     | Delete post (owner only)                    |
 | `/upload`                 | POST   | No     | Upload image                                |
-| `/images/{file_id}`       | GET    | No     | Get uploaded image                          |
+| `/images/{file_id}`       | GET    | No     | Serve uploaded image (auth required)        |
 | `/`                       | GET    | Yes    | API root (health/status)                    |
 
 ---
