@@ -38,8 +38,12 @@ async def upload_file(
 
 
 @router.get("/images/{file_id}")
-def get_image(file_id: str, current_user_id: str = Depends(get_current_user_id)):
-    """Serve an image stored in MongoDB GridFS."""
+def get_image(file_id: str):
+    """Serve an image stored in MongoDB GridFS.
+
+    Images must be readable without an Authorization header so browser
+    <img> tags can render uploaded post and profile images.
+    """
     try:
         oid = ObjectId(file_id)
     except (InvalidId, Exception):
