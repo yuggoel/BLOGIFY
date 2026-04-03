@@ -3,11 +3,10 @@ import io
 import gridfs
 from bson import ObjectId
 from bson.errors import InvalidId
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from fastapi.responses import StreamingResponse
 
 from ..auth import get_current_user_id
-from ..config import settings
 from ..database import db, fs
 
 router = APIRouter(tags=["upload"])
@@ -18,6 +17,7 @@ _ALLOWED = {"image/jpeg", "image/png", "image/gif", "image/webp"}
 
 @router.post("/upload")
 async def upload_file(
+    request: Request,
     file: UploadFile = File(...),
     _: str = Depends(get_current_user_id),
 ):
@@ -33,7 +33,7 @@ async def upload_file(
 
     data = await file.read()
     file_id = fs.put(data, filename=file.filename, content_type=file.content_type)
-    url = f"{settings.api_base_url}/images/{file_id}"
+    url = str(request.url_for("get_image", file_id=str(file_id)))
     return {"url": url}
 
 
